@@ -9,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
-import productImage from "@assets/Period_products_collection_photo_196a839e.png";
+import productImage from "@assets/Period_products_collection_photo_196a839e-VwUNoBus.png";
 
 
 const categories = ["All", "Tampons", "Pads", "Cups", "Underwear", "Discs", "Liners"];
