@@ -1,4 +1,4 @@
-import { HashRouter, Route, Switch } from "wouter/hash";
+import { useLocation, Route, Switch } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -16,6 +16,24 @@ import { useLocation } from "wouter";
 import { useEffect } from "react";
 
 import {ScrollManager} from "@/components/ScrollManager"; // NOT USED NOW
+
+function AppRouter() {
+  const [location, setLocation] = useLocation();
+
+  // hash-based navigation
+  const hash = window.location.hash.replace("#", "") || "/";
+  if (location !== hash) setLocation(hash);
+
+  return (
+    <Switch>
+      <Route path="/" component={Home} />
+      <Route path="/products" component={Products} />
+      <Route path="/about" component={About} />
+      <Route path="/contact" component={Contact} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
 
 function Router() {
   return (
@@ -75,7 +93,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Router />
+        <AppRouter />
         <ScrollToTop />
       </TooltipProvider>
     </QueryClientProvider>
