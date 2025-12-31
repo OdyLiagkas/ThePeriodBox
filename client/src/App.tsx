@@ -17,44 +17,14 @@ import { useEffect } from "react";
 
 import {ScrollManager} from "@/components/ScrollManager"; // NOT USED NOW
 
-function HashRouter() {
-  const [location, setLocation] = useLocation();
-
-  // synchronize hash with location
-  useEffect(() => {
-    const hash = window.location.hash.replace("#", "") || "/";
-    if (location !== hash) setLocation(hash);
-
-    const onHashChange = () => {
-      setLocation(window.location.hash.replace("#", "") || "/");
-    };
-
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
-  }, [location, setLocation]);
-
-  return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/products" component={Products} />
-      <Route path="/about" component={About} />
-      <Route path="/contact" component={Contact} />
-      <Route path="/survey" component={Survey} />
-      <Route path="/account" component={Account} />
-      <Route path="/login" component={Login} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
-
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/survey" component={Survey} />
       <Route path="/products" component={Products} />
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />
-      <Route path="/survey" component={Survey} />
       <Route path="/account" component={Account} />
       <Route path="/login" component={Login} />
       <Route component={NotFound} />
@@ -105,7 +75,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <HashRouter />
+        <Router />
         <ScrollToTop />
       </TooltipProvider>
     </QueryClientProvider>
