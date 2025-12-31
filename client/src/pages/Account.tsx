@@ -140,7 +140,7 @@ export default function Account() {
             Welcome back, {user?.name ?? "friend"} 👋
           </h1>
 
-          <Tabs defaultValue="results">
+          <Tabs defaultValue="products">
             <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2 w-full">
               <TabsTrigger value="products">For You</TabsTrigger>
               <TabsTrigger value="liked">Liked</TabsTrigger>
