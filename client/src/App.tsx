@@ -16,38 +16,6 @@ import { useEffect } from "react";
 
 import {ScrollManager} from "@/components/ScrollManager"; // NOT USED NOW
 
-function useGitHubPagesRedirect() {
-  const [, setLocation] = useLocation();
-
-  useEffect(() => {
-    const q = window.location.search;          // "?/survey"
-    if (q.startsWith("?/")) {
-      const real = q.slice(2) + window.location.hash; // "survey" or "survey#foo"
-      window.history.replaceState(
-        null,
-        "",
-        "/ThePeriodBox/" + real
-      );
-      setLocation("/" + real);                 // tell wouter immediately
-    }
-  }, []); // run only on mount
-}
-
-function Routes() {
-  useGitHubPagesRedirect(); 
-  return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/survey" component={Survey} />
-      <Route path="/products" component={Products} />
-      <Route path="/about" component={About} />
-      <Route path="/contact" component={Contact} />
-      <Route path="/account" component={Account} />
-      <Route path="/login" component={Login} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
 
 function Router() {
   return (
@@ -107,7 +75,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Routes />
+        <Router />
         <ScrollToTop />
       </TooltipProvider>
     </QueryClientProvider>
