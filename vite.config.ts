@@ -19,7 +19,7 @@ export default defineConfig({
         ]
       : []),
   ],
-  base: "/ThePeriodBox",
+  base: "/ThePeriodBox/",
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
