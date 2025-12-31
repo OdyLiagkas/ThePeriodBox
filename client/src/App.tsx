@@ -11,13 +11,15 @@ import NotFound from "@/pages/not-found";
 import Account from "@/pages/Account";
 import Login from "@/pages/Login";
 
-import { useLocation, Route, Switch, Redirect } from "wouter";
+import { useLocation, Redirect } from "wouter";
+
+import { Route, Switch, Router as WouterRouter } from "wouter";
 import { useEffect } from "react";
 
 import {ScrollManager} from "@/components/ScrollManager"; // NOT USED NOW
 
 
-function Router() {
+function Routes() {
   return (
     <Switch>
       <Route path="/" component={Home} />
@@ -64,19 +66,18 @@ useEffect(() => {
     window.addEventListener("hashchange", scrollToHash);
     return () => window.removeEventListener("hashchange", scrollToHash);
   }, []);
-
   return null;
 };
-
-
 
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Router />
-        <ScrollToTop />
+        <WouterRouter base="/ThePeriodBox">
+          <Routes />
+          <ScrollToTop />
+        </WouterRouter>
       </TooltipProvider>
     </QueryClientProvider>
   );
