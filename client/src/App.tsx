@@ -17,12 +17,21 @@ import { useEffect } from "react";
 
 import {ScrollManager} from "@/components/ScrollManager"; // NOT USED NOW
 
-function AppRouter() {
+function HashRouter() {
   const [location, setLocation] = useLocation();
 
-  // hash-based navigation
-  const hash = window.location.hash.replace("#", "") || "/";
-  if (location !== hash) setLocation(hash);
+  // synchronize hash with location
+  useEffect(() => {
+    const hash = window.location.hash.replace("#", "") || "/";
+    if (location !== hash) setLocation(hash);
+
+    const onHashChange = () => {
+      setLocation(window.location.hash.replace("#", "") || "/");
+    };
+
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, [location, setLocation]);
 
   return (
     <Switch>
@@ -30,6 +39,9 @@ function AppRouter() {
       <Route path="/products" component={Products} />
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />
+      <Route path="/survey" component={Survey} />
+      <Route path="/account" component={Account} />
+      <Route path="/login" component={Login} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -93,7 +105,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <AppRouter />
+        <HashRouter />
         <ScrollToTop />
       </TooltipProvider>
     </QueryClientProvider>
