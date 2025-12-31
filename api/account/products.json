@@ -1,0 +1,21 @@
+[
+  {
+    "id": "demo1",
+    "name": "Cup for Active Life",
+    "description": "Perfect for heavy flow & sports.",
+    "price": "$28",
+    "category": "Cups",
+    "matchReasons": ["Active lifestyle", "Heavy flow", "Eco preference"],
+    "imageUrl": "/Period_products_collection_photo_196a839e.png"
+    
+  },
+  {
+    "id": "demo2",
+    "name": "Bamboo Pads Overnight",
+    "description": "Super-absorbent bamboo core, biodegradable.",
+    "price": "$12.00",
+    "category": "Pads",
+    "matchReasons": ["Bamboo core", "Biodegradable", "Overnight"],
+    "imageUrl": "/Period_products_collection_photo_196a839e.png"
+  }
+]
