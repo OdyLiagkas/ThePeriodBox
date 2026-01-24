@@ -69,9 +69,41 @@ function useDemoAuth() {
   return { user, isLoading, isAuthenticated: !!user, logout };
 }
 
+function useAuth() {
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Ask the server "Who am I?"
+    fetch("/api/user")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        setUser(data);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setUser(null);
+        setIsLoading(false);
+      });
+  }, []);
+
+  const logout = () => {
+    window.location.href = "/api/logout";
+  };
+
+  return { 
+    user, 
+    isLoading, 
+    isAuthenticated: !!user, 
+    logout,
+    // Helper to format the name
+    name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : "Friend"
+  };
+}
+
 /* ----------  PAGE  ---------- */
 export default function Account() {
-  const { user, isLoading, isAuthenticated, logout } = useDemoAuth();
+  const { user, isLoading, isAuthenticated, logout } = useAuth();
   const [, setLocation] = useLocation();
 
   const [survey, setSurvey] = useState<SurveyResult | null>(null);

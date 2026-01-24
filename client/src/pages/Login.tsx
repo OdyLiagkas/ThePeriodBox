@@ -1,11 +1,17 @@
-import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function Login() {
-  useEffect(() => {
-    // drop demo cookie and bounce to account
-    document.cookie =
-      "demo_user=%7B%22id%22%3A%221%22%2C%22name%22%3A%22Demo%20User%22%2C%22email%22%3A%22demo%40periodbox.com%22%7D; path=/";
-    window.location.replace("/account");
-  }, []);
-  return <p className="p-8">Signing you in…</p>;
+  const handleGoogleLogin = () => {
+    // This sends the user to the backend route we'll create in Step 7
+    window.location.href = "/api/auth/google";
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-8">
+      <h1 className="text-2xl font-bold mb-6">Sign in to The Period Box</h1>
+      <Button size="lg" onClick={handleGoogleLogin}>
+        Continue with Google
+      </Button>
+    </div>
+  );
 }

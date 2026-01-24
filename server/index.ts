@@ -1,10 +1,32 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+import passport from "passport";
+import "./auth"; // This imports your server/auth.ts logic
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+const PostgresStore = connectPg(session);
+app.use(session({
+  store: new PostgresStore({ 
+    conString: process.env.DATABASE_URL,
+    tableName: 'sessions' // Matches your shared/models/auth.ts
+  }),
+  secret: process.env.SESSION_SECRET || "fallback_secret",
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    secure: process.env.NODE_ENV === "production" 
+  }
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -37,6 +59,29 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+
+  app.get("/api/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+  
+  app.get("/api/auth/google/callback", 
+    passport.authenticate("google", { failureRedirect: "/login" }),
+    (req, res) => res.redirect("/account")
+  );
+
+  app.get("/api/user", (req, res) => {
+    if (req.isAuthenticated()) {
+      res.json(req.user);
+    } else {
+      res.status(401).json({ message: "Not logged in" });
+    }
+  });
+
+  app.get("/api/logout", (req, res, next) => {
+    req.logout((err) => {
+      if (err) return next(err);
+      res.redirect("/");
+    });
+  });
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

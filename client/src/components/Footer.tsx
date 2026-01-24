@@ -37,7 +37,7 @@ export function Footer() {
                 <Instagram className="h-5 w-5" />
               </a>
               <a
-    href="https://www.linkedin.com/"        
+    href="https://www.linkedin.com/company/the-period-box/"        
     target="_blank"
     rel="noopener noreferrer"
     className="p-2 hover-elevate active-elevate-2 rounded-md"
