@@ -203,12 +203,12 @@ export default function Survey() {
   const [sessionId, setSessionId] = useState<string>("");
 
   // Generate a session ID when component mounts
-  useEffect(() => {
-    const id = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    setSessionId(id);
-  }, []);
+//  useEffect(() => {
+//    const id = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+//    setSessionId(id);
+//  }, []);
 
-const submitSurvey = useMutation({
+/*const submitSurvey = useMutation({
   mutationFn: async (surveyData: { sessionId: string; answers: Record<string, string | string[]> }) => {
     // OFFLINE: write to localStorage instead of calling API
     localStorage.setItem("demo_survey", JSON.stringify(surveyData.answers));
@@ -226,6 +226,23 @@ const submitSurvey = useMutation({
   onError: (error) =>
     toast({ title: "Error", description: error.message, variant: "destructive" }),
 });
+*/
+
+const submitSurvey = useMutation({
+  mutationFn: async (surveyData: { sessionId: string; answers: Record<string, string | string[]> }) => {
+    return await apiRequest("POST", "/api/survey-responses", surveyData);
+  },
+  onSuccess: () => {
+    if (isAuthenticated) {
+      setLocation("/account"); // Automatically redirect logged-in users
+    } else {
+      setIsComplete(true); // Show CTA for anonymous users
+    }
+  },
+  onError: (error: any) =>
+    toast({ title: "Error", description: error.message, variant: "destructive" }),
+});
+
 
   /*
   const submitSurvey = useMutation({

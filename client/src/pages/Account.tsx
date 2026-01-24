@@ -120,18 +120,20 @@ export default function Account() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    // 1.  prefer live localStorage
-    const raw = localStorage.getItem("demo_survey");
-    const date = localStorage.getItem("demo_survey_date");
-    if (raw && date) {
-      setSurvey({ id: "live", completedAt: date, answers: JSON.parse(raw) });
-    } else {
-      // 2.  fall back to static stub
-      fetch("/api/account/survey.json")
-        .then((r) => r.json())
-        .then(setSurvey)
-        .catch(() => setSurvey(null));
+// Load user's survey from backend
+fetch("/api/survey-responses")
+  .then(res => res.ok ? res.json() : null)
+  .then(data => {
+    if (data) {
+      setSurvey({
+        id: data.id,
+        completedAt: data.created_at,
+        answers: data.answers,
+      });
     }
+  })
+  .catch(() => setSurvey(null));
+
 
     // Load liked products
     const likedRaw = localStorage.getItem("liked_products");
@@ -168,12 +170,14 @@ export default function Account() {
       <Header />
       <main className="flex-1 py-16 md:py-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-          <h1 className="text-3xl md:text-4xl font-bold font-heading mb-8">
-            Welcome back, {user?.firstName ?? "friend"} 👋
-            <Button variant="outline" onClick={logout}>
+<div className="mb-8">
+  <h1 className="text-3xl md:text-4xl font-bold font-heading mb-4">
+    Welcome back, {user?.firstName ?? "friend"} 👋
+  </h1>
+  <Button variant="outline" onClick={logout}>
     Sign Out
   </Button>
-          </h1>
+</div>
 
           <Tabs defaultValue="products">
             <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2 w-full">
