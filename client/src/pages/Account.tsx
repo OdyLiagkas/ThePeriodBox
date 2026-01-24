@@ -169,7 +169,10 @@ export default function Account() {
       <main className="flex-1 py-16 md:py-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
           <h1 className="text-3xl md:text-4xl font-bold font-heading mb-8">
-            Welcome back, {user?.name ?? "friend"} 👋
+            Welcome back, {user?.firstName ?? "friend"} 👋
+            <Button variant="outline" onClick={logout}>
+    Sign Out
+  </Button>
           </h1>
 
           <Tabs defaultValue="products">

@@ -215,7 +215,14 @@ const submitSurvey = useMutation({
     localStorage.setItem("demo_survey_date", new Date().toISOString());
     return { ok: true };
   },
-  onSuccess: () => setIsComplete(true),
+  onSuccess: () => {
+  if (isAuthenticated) {
+    setLocation("/account");
+  } else {
+    setIsComplete(true);
+  }
+},
+
   onError: (error) =>
     toast({ title: "Error", description: error.message, variant: "destructive" }),
 });
