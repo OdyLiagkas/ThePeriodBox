@@ -121,7 +121,7 @@ export default function Account() {
     if (!isAuthenticated) return;
 
 // Load user's survey from backend
-fetch("/api/survey-responses")
+fetch("/api/survey-responses", { credentials: "include" })
   .then(res => res.ok ? res.json() : null)
   .then(data => {
     if (data) {
@@ -172,7 +172,7 @@ fetch("/api/survey-responses")
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
 <div className="mb-8">
   <h1 className="text-3xl md:text-4xl font-bold font-heading mb-4">
-    Welcome back, {user?.firstName ?? "friend"} 👋
+    Welcome back, {user?.first_name ?? "friend"} 👋
   </h1>
   <Button variant="outline" onClick={logout}>
     Sign Out
