@@ -307,7 +307,7 @@ const submitSurvey = useMutation({
       }, 500);
       return;
     }
-    setLocation("/products?fromSurvey=true");
+    setLocation("/account");
   };
 
   if (isComplete) {
