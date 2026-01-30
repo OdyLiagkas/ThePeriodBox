@@ -74,13 +74,14 @@ app.get("/api/user", (req, res) => {
 
   const user = req.user as any;
 
-  res.json({
-    id: user.id,
-    email: user.email,
-    firstName: user.first_name,
-    lastName: user.last_name,
-    googleId: user.google_id,
-  });
+res.json({
+  id: user.id,
+  email: user.email,
+  firstName: user.firstName,
+  lastName: user.lastName,
+  googleId: user.googleId,
+});
+
 });
 
 
