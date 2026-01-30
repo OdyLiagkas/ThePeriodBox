@@ -234,7 +234,7 @@ const submitSurvey = useMutation({
   },
   onSuccess: () => {
     if (isAuthenticated) {
-      setLocation("/account"); // Automatically redirect logged-in users
+      setIsComplete(true); // Automatically redirect logged-in users
     } else {
       setIsComplete(true); // Show CTA for anonymous users
     }
