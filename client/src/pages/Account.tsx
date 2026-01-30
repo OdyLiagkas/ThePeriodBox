@@ -75,7 +75,7 @@ function useAuth() {
 
   useEffect(() => {
     // Ask the server "Who am I?"
-    fetch("/api/user")
+    fetch("/api/user", { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         setUser(data);
