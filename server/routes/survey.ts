@@ -7,22 +7,20 @@ router.post("/survey-responses", async (req, res) => {
   const { sessionId, answers } = req.body;
   const user = req.user as any | undefined;
 
-  if (!answers) {
-    return res.status(400).json({ message: "Missing survey answers" });
-  }
+  if (!answers) return res.status(400).json({ message: "Missing survey answers" });
 
   const client = await pool.connect();
   try {
-    // If user is logged in, save user_id, else fallback to session_id
-    await client.query(
+    const result = await client.query(
       `
       INSERT INTO survey_responses (user_id, session_id, answers)
       VALUES ($1, $2, $3)
+      RETURNING *
       `,
       [user?.id ?? null, user ? null : sessionId, answers]
     );
 
-    res.json({ ok: true });
+    res.json(result.rows[0]);
   } finally {
     client.release();
   }
@@ -49,6 +47,5 @@ router.get("/survey-responses", async (req, res) => {
     client.release();
   }
 });
-
 
 export default router;
