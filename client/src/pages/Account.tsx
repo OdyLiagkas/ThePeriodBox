@@ -78,7 +78,7 @@ export default function Account() {
   const [, setLocation] = useLocation();
 
   // Use the survey hook
-  const { survey, isLoading: surveyLoading, error: surveyError } = useSurvey();
+  //const { survey, isLoading: surveyLoading, error: surveyError } = useSurvey();
 
   const [products, setProducts] = useState<PortalProduct[]>([]);
   const [likedProducts, setLikedProducts] = useState<LikedProduct[]>([]);
@@ -144,7 +144,7 @@ export default function Account() {
               <TabsTrigger value="results">Survey Results</TabsTrigger>
               <TabsTrigger value="orders">Orders</TabsTrigger>
             </TabsList>
-
+{/*}
 <TabsContent value="results" className="space-y-4 pt-2">
   <Card>
     <CardContent className="p-6">
@@ -155,7 +155,7 @@ export default function Account() {
           <h3 className="font-semibold mb-2">Completed</h3>
           <p className="text-sm text-muted-foreground">{survey.completedAt}</p>
           
-          {/* Prettier display */}
+          {/* Prettier display */}{/*}
           <SurveyAnswers answers={survey.answers} className="mt-3" />
 
         </>
