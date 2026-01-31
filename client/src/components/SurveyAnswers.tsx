@@ -7,7 +7,7 @@ export function SurveyAnswers({ answers, className }: SurveyAnswersProps) {
   return (
     <div className={className}>
       {Object.entries(answers).map(([key, value]) => (
-        <div key={key} className="flex gap-2 items-start">
+        <div key={key} className="flex gap-2 items-baseline">
           <span className="bg-orange-100 text-orange-800 capitalize px-2 py-1 rounded">
             {key.replace(/-/g, " ")}:
           </span>

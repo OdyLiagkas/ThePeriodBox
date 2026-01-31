@@ -11,13 +11,10 @@ router.post("/survey-responses", async (req, res) => {
 
   const client = await pool.connect();
   try {
-    // Use upsert: if user_id exists, update answers
     const result = await client.query(
       `
       INSERT INTO survey_responses (user_id, session_id, answers)
       VALUES ($1, $2, $3)
-      ON CONFLICT (user_id)
-      DO UPDATE SET answers = EXCLUDED.answers, created_at = NOW()
       RETURNING *
       `,
       [user?.id ?? null, user ? null : sessionId, answers]
@@ -28,7 +25,6 @@ router.post("/survey-responses", async (req, res) => {
     client.release();
   }
 });
-
 
 router.get("/survey-responses", async (req, res) => {
   const user = req.user as any | undefined;
