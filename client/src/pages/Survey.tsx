@@ -196,7 +196,8 @@ const surveyQuestions: Question[] = [
 export default function Survey() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { user, isLoading: isAuthLoading, isAuthenticated } = useAuth();
+  //const { user, isLoading: isAuthLoading, isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [isComplete, setIsComplete] = useState(false);
@@ -229,19 +230,46 @@ export default function Survey() {
 */
 
 const submitSurvey = useMutation({
-  mutationFn: async (surveyData: { sessionId: string; answers: Record<string, string | string[]> }) => {
-    return await apiRequest("POST", "/api/survey-responses", surveyData);
+  mutationFn: async (surveyData: { answers: Record<string, string | string[]> }) => {
+    // POST to backend with credentials included
+    const res = await fetch("/api/survey-responses", {
+      method: "POST",
+      credentials: "include", // <-- MUST include cookies for authentication
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(surveyData),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ message: res.statusText }));
+      throw new Error(errorData.message || "Failed to submit survey");
+    }
+
+    return res.json();
   },
-  onSuccess: () => {
+
+  onSuccess: (data) => {
+    console.log("Survey submitted successfully:", data);
+
+    // Redirect logged-in users to account page
     if (isAuthenticated) {
-      setIsComplete(true); // Automatically redirect logged-in users
+      setIsComplete(true);
     } else {
-      setIsComplete(true); // Show CTA for anonymous users
+      // For anonymous users, show completion state
+      setIsComplete(true);
     }
   },
-  onError: (error: any) =>
-    toast({ title: "Error", description: error.message, variant: "destructive" }),
+
+  onError: (error: any) => {
+    toast({
+      title: "Error submitting survey",
+      description: error.message,
+      variant: "destructive",
+    });
+  },
 });
+
 
 
   /*
@@ -268,15 +296,16 @@ const submitSurvey = useMutation({
     setAnswers({ ...answers, [currentQuestion.id]: value });
   };
 
-  const handleNext = () => {
-    if (isLastQuestion) {
-      submitSurvey.mutate({ sessionId, answers });
-      console.log("Survey completed with answers:", answers);
-    } else {
-      setCurrentStep(currentStep + 1);
-      console.log(`Moving to question ${currentStep + 2}`);
-    }
-  };
+const handleNext = () => {
+  if (isLastQuestion) {
+    submitSurvey.mutate({ answers }); 
+    console.log("Survey completed with answers:", answers);
+  } else {
+    setCurrentStep(currentStep + 1);
+    console.log(`Moving to question ${currentStep + 2}`);
+  }
+};
+
 
   const handlePrevious = () => {
     setCurrentStep(currentStep - 1);
