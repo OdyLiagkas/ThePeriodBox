@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowLeft } from "lucide-react";
 import heroImage from "@assets/Woman_with_box_1766110255116.png";
 
 export function HeroSection() {
@@ -31,12 +31,12 @@ export function HeroSection() {
               <Link href="/survey" data-testid="link-hero-survey">
                 <Button size="lg" className="text-base font-semibold group">
                   Start Your Journey
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowLeft className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              <Link href="/products" data-testid="link-hero-products">
+              <Link href="/about" data-testid="link-hero-products">
                 <Button size="lg" variant="outline" className="text-base font-semibold">
-                  Browse Products
+                  About ThePeriodBox
                 </Button>
               </Link>
             </div>

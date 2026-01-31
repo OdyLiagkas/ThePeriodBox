@@ -13,7 +13,7 @@ export function Header() {
     { label: "Home", path: "/" },
     //{ label: "Survey", path: "/survey" },
     //{ label: "Products", path: "/products" },
-    { label: "About", path: "/about" },
+    { label: "About Us", path: "/about" },
   ];
 
   return (
