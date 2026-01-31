@@ -233,8 +233,8 @@ app.post("/api/survey-responses", async (req, res) => {
 
     const payload = {
       answers: req.body.answers,
-      sessionId: req.sessionID,       
-      userId: user?.id ?? null,        
+      sessionId: req.body.sessionId ?? null,
+      userId: user?.id ?? null,
     };
 
     const validated = insertSurveyResponseSchema.parse(payload);
@@ -246,7 +246,6 @@ app.post("/api/survey-responses", async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
-
 
 
   // Get personalized recommendations
