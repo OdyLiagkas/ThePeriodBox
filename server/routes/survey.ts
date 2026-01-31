@@ -7,12 +7,7 @@ router.post("/survey-responses", async (req, res) => {
   const { sessionId, answers } = req.body;
   const user = req.user as any | undefined;
 
-  if (!answers) {
-    return res.status(400).json({ message: "Missing survey answers" });
-  }
-
-  const effectiveSessionId =
-    sessionId ?? `user-${user?.id ?? "anonymous"}`;
+  if (!answers) return res.status(400).json({ message: "Missing survey answers" });
 
   const client = await pool.connect();
   try {
@@ -20,23 +15,16 @@ router.post("/survey-responses", async (req, res) => {
       `
       INSERT INTO survey_responses (user_id, session_id, answers)
       VALUES ($1, $2, $3)
-      ON CONFLICT (user_id)
-      DO UPDATE SET answers = EXCLUDED.answers, created_at = NOW()
       RETURNING *
       `,
-      [user?.id ?? null, effectiveSessionId, answers]
+      [user?.id ?? null, user ? null : sessionId, answers]
     );
 
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("Survey insert error:", err);
-    res.status(500).json({ message: "Failed to save survey" });
+    res.json(result.rows[0] || null);
   } finally {
     client.release();
   }
 });
-
-
 
 router.get("/survey-responses", async (req, res) => {
   const user = req.user as any | undefined;
