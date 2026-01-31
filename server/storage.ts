@@ -1,65 +1,68 @@
-import { 
-  type SurveyResponse, 
+import {
+  type SurveyResponse,
   type InsertSurveyResponse,
   type Product,
-  type InsertProduct
+  type InsertProduct,
+  surveyResponses,
+  products,
 } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { db } from "./db";
+import { desc, eq, inArray } from "drizzle-orm";
 
 export interface IStorage {
   createSurveyResponse(response: InsertSurveyResponse): Promise<SurveyResponse>;
   getSurveyResponseBySessionId(sessionId: string): Promise<SurveyResponse | undefined>;
-  
+
   getAllProducts(): Promise<Product[]>;
   getProductsByIds(ids: string[]): Promise<Product[]>;
   seedProducts(products: InsertProduct[]): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private surveyResponses: Map<string, SurveyResponse>;
-  private products: Map<string, Product>;
+export class PgStorage implements IStorage {
 
-  constructor() {
-    this.surveyResponses = new Map();
-    this.products = new Map();
+  async createSurveyResponse(
+    insertResponse: InsertSurveyResponse
+  ): Promise<SurveyResponse> {
+    const [row] = await db
+      .insert(surveyResponses)
+      .values(insertResponse)
+      .returning();
+
+    return row;
   }
 
-  async createSurveyResponse(insertResponse: InsertSurveyResponse): Promise<SurveyResponse> {
-    const id = randomUUID();
-    const response: SurveyResponse = {
-      ...insertResponse,
-      id,
-      createdAt: new Date(),
-    };
-    this.surveyResponses.set(id, response);
-    return response;
-  }
+  async getSurveyResponseBySessionId(
+    sessionId: string
+  ): Promise<SurveyResponse | undefined> {
+    const rows = await db
+      .select()
+      .from(surveyResponses)
+      .where(eq(surveyResponses.sessionId, sessionId))
+      .orderBy(desc(surveyResponses.createdAt))
+      .limit(1);
 
-  async getSurveyResponseBySessionId(sessionId: string): Promise<SurveyResponse | undefined> {
-    return Array.from(this.surveyResponses.values())
-      .filter(response => response.sessionId === sessionId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+    return rows[0];
   }
 
   async getAllProducts(): Promise<Product[]> {
-    return Array.from(this.products.values());
+    return db.select().from(products);
   }
 
   async getProductsByIds(ids: string[]): Promise<Product[]> {
-    return ids
-      .map(id => this.products.get(id))
-      .filter((product): product is Product => product !== undefined);
+    if (ids.length === 0) return [];
+
+    return db
+      .select()
+      .from(products)
+      .where(inArray(products.id, ids));
   }
 
-  async seedProducts(products: InsertProduct[]): Promise<void> {
-    // Only seed if products are empty (idempotent)
-    if (this.products.size === 0) {
-      for (const product of products) {
-        const id = randomUUID();
-        this.products.set(id, { ...product, id });
-      }
-    }
+  async seedProducts(seed: InsertProduct[]): Promise<void> {
+    const existing = await db.select().from(products).limit(1);
+    if (existing.length > 0) return;
+
+    await db.insert(products).values(seed);
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new PgStorage();

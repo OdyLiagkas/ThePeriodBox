@@ -227,15 +227,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await seedInitialData();
 
   // Submit survey response
-  app.post("/api/survey-responses", async (req, res) => {
-    try {
-      const validated = insertSurveyResponseSchema.parse(req.body);
-      const response = await storage.createSurveyResponse(validated);
-      res.json(response);
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
+app.post("/api/survey-responses", async (req, res) => {
+  try {
+    const user = req.user as any | undefined;
+
+    const payload = {
+      answers: req.body.answers,
+      sessionId: req.body.sessionId ?? null,
+      userId: user?.id ?? null,
+    };
+
+    const validated = insertSurveyResponseSchema.parse(payload);
+    const response = await storage.createSurveyResponse(validated);
+
+    res.json(response);
+  } catch (error: any) {
+    console.error("Survey submit error:", error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
 
   // Get personalized recommendations
   app.get("/api/recommendations", async (req, res) => {
