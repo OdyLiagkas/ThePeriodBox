@@ -239,15 +239,13 @@ const submitSurvey = useMutation({
       throw new Error("You must be logged in to submit a survey.");
     }
 
-    const res = await fetch("/api/survey-responses", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        answers: surveyData.answers,
-        userId: user.googleId, // <-- use Google ID
-      }),
-    });
+const res = await fetch("/api/survey-responses", {
+  method: "POST",
+  credentials: "include",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ answers: surveyData.answers }),
+});
+
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({ message: res.statusText }));
