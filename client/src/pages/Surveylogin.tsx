@@ -20,7 +20,7 @@ export default function Surveylogin() {
         Continue with Google
       </Button>
       <Button variant="outline" onClick={handleBack}>
-        Back to Hom
+        Back to Home
       </Button>
       
     </div>
