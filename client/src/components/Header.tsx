@@ -12,7 +12,7 @@ export function Header() {
   const navItems = [
     { label: "Home", path: "/" },
     //{ label: "Survey", path: "/survey" },
-    { label: "Products", path: "/products" },
+    //{ label: "Products", path: "/products" },
     { label: "About", path: "/about" },
   ];
 

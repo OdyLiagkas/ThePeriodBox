@@ -3,7 +3,9 @@ import { Instagram, Linkedin, Facebook } from "lucide-react";
 import logoImage from "@assets/Full_Page_1766110908945.png";
 import { RefreshLink } from "@/components/RefreshLink";
 
+/* 
 
+*/
 export function Footer() {
   return (
     <footer className="border-t bg-card">
@@ -65,11 +67,11 @@ export function Footer() {
                   <span className="text-muted-foreground hover:text-foreground transition-colors">Home</span>
                 </RefreshLink>
               </li>
-              <li>
+{/*              <li>
                 <RefreshLink href="/products" data-testid="link-footer-products">
                   <span className="text-muted-foreground hover:text-foreground transition-colors">Products</span>
                 </RefreshLink>
-              </li>
+              </li>     */}
               <li>
                 <RefreshLink href="/about" data-testid="link-footer-about">
                   <span className="text-muted-foreground hover:text-foreground transition-colors">About Us</span>
