@@ -202,7 +202,10 @@ export default function Survey() {
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [isComplete, setIsComplete] = useState(false);
   const [sessionId, setSessionId] = useState<string>("");
-
+    /*  redirect if not logged in  */
+  useEffect(() => {
+    if ( !isAuthenticated) setLocation("/login");
+  }, [isAuthenticated, setLocation]);
   // Generate a session ID when component mounts
 //  useEffect(() => {
 //    const id = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
