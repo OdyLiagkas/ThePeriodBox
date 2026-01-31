@@ -231,21 +231,10 @@ export default function Survey() {
 
 const submitSurvey = useMutation({
   mutationFn: async (surveyData: { answers: Record<string, string | string[]> }) => {
-<<<<<<< HEAD
     if (!isAuthenticated || !user?.googleId) {
       throw new Error("You must be logged in to submit a survey.");
     }
 
-const res = await fetch("/api/survey-responses", {
-  method: "POST",
-  credentials: "include",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ answers: surveyData.answers,
-                        userId: user.id,
-   }),
-});
-
-=======
     // POST to backend with credentials included
     const res = await fetch("/api/survey-responses", {
       method: "POST",
@@ -255,7 +244,6 @@ const res = await fetch("/api/survey-responses", {
       },
       body: JSON.stringify(surveyData),
     });
->>>>>>> parent of caf8b19e (plz)
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({ message: res.statusText }));
