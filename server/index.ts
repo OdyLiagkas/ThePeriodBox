@@ -5,6 +5,8 @@ import session from "express-session";
 import connectPg from "connect-pg-simple";
 import passport from "passport";
 import "./auth"; // This imports your server/auth.ts logic
+import surveyRouter from "./routes/survey";
+
 
 const app = express();
 app.use(express.json());
@@ -35,6 +37,8 @@ app.use((req, res, next) => {
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
+
+  
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
     capturedJsonResponse = bodyJson;
@@ -59,6 +63,8 @@ app.use((req, res, next) => {
 
   next();
 });
+
+app.use("/api", surveyRouter);
 
 (async () => {
 

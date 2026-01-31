@@ -34,7 +34,8 @@ router.get("/survey-responses", async (req, res) => {
   try {
     const result = await client.query(
       `
-      SELECT * FROM survey_responses
+      SELECT id, created_at, answers
+      FROM survey_responses
       WHERE user_id = $1
       ORDER BY created_at DESC
       LIMIT 1
