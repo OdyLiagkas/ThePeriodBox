@@ -75,10 +75,10 @@ app.get("/api/auth/google/callback",
   (req, res) => res.redirect("/account")
 );
 
-  app.get("/api/auth/google-survey", passport.authenticate("google", { scope: ["profile", "email"] }));
+  app.get("/api/auth/google-survey", passport.authenticate("google-survey", { scope: ["profile", "email"] }));
   
   app.get("/api/auth/google-survey/callback", 
-    passport.authenticate("google", { failureRedirect: "/login" }),
+    passport.authenticate("google-survey", { failureRedirect: "/login" }),
     (req, res) => res.redirect("/survey")
   ); 
 
