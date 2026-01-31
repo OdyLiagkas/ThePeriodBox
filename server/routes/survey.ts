@@ -26,17 +26,12 @@ router.post("/survey-responses", async (req, res) => {
   try {
 const result = await client.query(
   `
-  INSERT INTO survey_responses (user_id, session_id, answers)
-  VALUES ($1, $2, $3)
-  ON CONFLICT (user_id) 
-  DO UPDATE SET 
-    session_id = EXCLUDED.session_id,
-    answers = EXCLUDED.answers,
-    created_at = NOW()
-  RETURNING *
-  `,
-  [user.id, "", answers]
-);
+      INSERT INTO survey_responses (user_id, session_id, answers)
+      VALUES ($1, $2, $3)
+      RETURNING *
+      `,
+      [user.id, "", answers]  // Always use user.id, session_id is null
+    );
 
     res.json(result.rows[0]);
   } catch (err: any) {
