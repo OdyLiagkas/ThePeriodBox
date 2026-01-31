@@ -20,7 +20,7 @@ router.post("/survey-responses", async (req, res) => {
       [user?.id ?? null, user ? null : sessionId, answers]
     );
 
-    res.json(result.rows[0]);
+    res.json(result.rows[0] || null);
   } finally {
     client.release();
   }

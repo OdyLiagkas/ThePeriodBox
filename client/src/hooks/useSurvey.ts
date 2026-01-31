@@ -12,7 +12,6 @@ export function useSurvey() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch survey from backend for the logged-in user
     const fetchSurvey = async () => {
       setIsLoading(true);
       try {
@@ -20,24 +19,36 @@ export function useSurvey() {
           credentials: "include", // important to send cookies/session
         });
 
+        // Read response as text first to debug non-JSON responses
+        const text = await res.text();
+        console.log("Raw survey response:", text);
+
         if (!res.ok) {
-          throw new Error(`Failed to fetch survey: ${res.statusText}`);
+          throw new Error(`Failed to fetch survey: ${res.status} ${res.statusText}`);
         }
 
-        const data = await res.json();
-
-        if (data) {
-          setSurvey({
-            id: data.id,
-            completedAt: data.created_at,
-            answers: data.answers,
-          });
-        } else {
-          setSurvey(null);
+        // Attempt to parse JSON safely
+        let data: any = null;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          console.error("Survey response was not JSON:", text);
         }
+
+        // Update survey state if valid, otherwise null
+        setSurvey(
+          data
+            ? {
+                id: data.id,
+                completedAt: data.created_at,
+                answers: data.answers,
+              }
+            : null
+        );
       } catch (err: any) {
         console.error("Error fetching survey:", err);
         setError(err.message);
+        setSurvey(null);
       } finally {
         setIsLoading(false);
       }
