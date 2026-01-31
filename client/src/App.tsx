@@ -11,6 +11,7 @@ import Contact from "@/pages/Contact";
 import NotFound from "@/pages/not-found";
 import Account from "@/pages/Account";
 import Login from "@/pages/Login";
+import Surveylogin from "@/pages/Surveylogin"
 
 import { useLocation } from "wouter";
 import { useEffect } from "react";
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/contact" component={Contact} />
       <Route path="/account" component={Account} />
       <Route path="/login" component={Login} />
+      <Route path="/surveylogin" component={Surveylogin} />
       <Route component={NotFound} />
     </Switch>
   );

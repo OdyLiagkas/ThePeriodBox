@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 
 
-export default function Login() {
+export default function Surveylogin() {
   const [, setLocation] = useLocation();
   const handleGoogleLogin = () => {
     // This sends the user to the backend route we'll create in Step 7
