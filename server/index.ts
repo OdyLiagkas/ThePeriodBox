@@ -7,6 +7,11 @@ import passport from "passport";
 import "./auth"; // This imports your server/auth.ts logic
 import surveyRouter from "./routes/survey";
 
+declare module "express-session" {
+  interface SessionData {
+    redirectAfterLogin?: string;
+  }
+}
 
 const app = express();
 app.use(express.json());
@@ -68,11 +73,23 @@ app.use("/api", surveyRouter);
 
 (async () => {
 
-  app.get("/api/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+  // Updated: Store redirect in session
+  app.get("/api/auth/google", (req, res, next) => {
+    const redirect = req.query.redirect as string;
+    if (redirect) {
+      req.session.redirectAfterLogin = redirect;
+    }
+    passport.authenticate("google", { scope: ["profile", "email"] })(req, res, next);
+  });
   
+  // Updated: Use stored redirect or default to /account
   app.get("/api/auth/google/callback", 
     passport.authenticate("google", { failureRedirect: "/login" }),
-    (req, res) => res.redirect("/account")
+    (req, res) => {
+      const redirectUrl = req.session.redirectAfterLogin || "/account";
+      delete req.session.redirectAfterLogin;
+      res.redirect(redirectUrl);
+    }
   );
 
 app.get("/api/user", (req, res) => {

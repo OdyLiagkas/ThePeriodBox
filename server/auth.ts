@@ -15,7 +15,7 @@ declare global {
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    callbackURL: `${process.env.AUTH_REDIRECT_URL}/api/auth/google/callback`,
+    callbackURL: "${process.env.AUTH_REDIRECT_URL}/api/auth/google/callback",
   },
   async (_accessToken: any, _refreshToken: any, profile: any, done: any) => {
     try {
