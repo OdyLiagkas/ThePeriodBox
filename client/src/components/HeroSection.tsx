@@ -5,10 +5,18 @@ import heroImage from "@assets/Woman_with_box_1766110255116.png";
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden -mt-6 md:-mt-20">
+    <section
+  className="
+    relative
+    overflow-hidden
+    -mt-28
+    pt-4
+    h-screen          
+  "
+>
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-chart-2/10 to-chart-3/10 -z-10" />
       
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-2 md:pt-4 pb-4 md:pb-6">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-2 md:pt-0 pb-4 md:pb-0">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm font-medium text-primary">
