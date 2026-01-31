@@ -6,7 +6,7 @@ export default function Login() {
   const [, setLocation] = useLocation();
   const handleGoogleLogin = () => {
     // This sends the user to the backend route we'll create in Step 7
-    window.location.href = "/api/auth/google";
+    window.location.href = "/api/auth/google-survey";
   };
   const handleBack = () => {
     setLocation("/");
@@ -20,7 +20,7 @@ export default function Login() {
         Continue with Google
       </Button>
       <Button variant="outline" onClick={handleBack}>
-        Back to Home
+        Back to Hom
       </Button>
       
     </div>
