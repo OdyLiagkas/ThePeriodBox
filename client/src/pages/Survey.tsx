@@ -243,9 +243,11 @@ const res = await fetch("/api/survey-responses", {
   method: "POST",
   credentials: "include",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ answers: surveyData.answers,
-                        userId: user.id,
-   }),
+body: JSON.stringify({
+  sessionId,
+  answers: surveyData.answers,
+}),
+
 });
 
 
