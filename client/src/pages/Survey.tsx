@@ -228,24 +228,31 @@ export default function Survey() {
     toast({ title: "Error", description: error.message, variant: "destructive" }),
 });
 */
+useEffect(() => {
+  const id = `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  setSessionId(id);
+}, []);
 
 const submitSurvey = useMutation({
   mutationFn: async (surveyData: { answers: Record<string, string | string[]> }) => {
-    // POST to backend with credentials included
+    if (!isAuthenticated || !user?.googleId) {
+      throw new Error("You must be logged in to submit a survey.");
+    }
+
     const res = await fetch("/api/survey-responses", {
       method: "POST",
-      credentials: "include", // <-- MUST include cookies for authentication
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(surveyData),
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        answers: surveyData.answers,
+        userId: user.googleId, // <-- use Google ID
+      }),
     });
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({ message: res.statusText }));
       throw new Error(errorData.message || "Failed to submit survey");
     }
-
     return res.json();
   },
 
