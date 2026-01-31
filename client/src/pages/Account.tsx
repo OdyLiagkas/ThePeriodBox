@@ -7,15 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
 import { ProductCard } from "@/components/ProductCard";
-import {ProductCardNoHeart} from "@/components/ProductCardNoHeart";
+import { ProductCardNoHeart } from "@/components/ProductCardNoHeart";
+import { useSurvey, SurveyResult } from "@/hooks/useSurvey";
 
 /* ----------  TYPES  ---------- */
-interface SurveyResult {
-  id: string;
-  completedAt: string;
-  answers: Record<string, any>;
-}
-
 interface PortalProduct {
   id: string;
   name: string;
@@ -45,36 +40,11 @@ interface LikedProduct {
 }
 
 /* ----------  DEMO AUTH HOOK  ---------- */
-function useDemoAuth() {
-  const [user, setUser] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const cookie = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("demo_user="));
-    if (cookie) {
-      try {
-        setUser(JSON.parse(decodeURIComponent(cookie.split("=")[1])));
-      } catch {}
-    }
-    setIsLoading(false);
-  }, []);
-
-  const logout = () => {
-    document.cookie = "demo_user=; path=/; max-age=0";
-    window.location.href = "/";
-  };
-
-  return { user, isLoading, isAuthenticated: !!user, logout };
-}
-
 function useAuth() {
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Ask the server "Who am I?"
     fetch("/api/user", { credentials: "include" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
@@ -96,7 +66,6 @@ function useAuth() {
     isLoading, 
     isAuthenticated: !!user, 
     logout,
-    // Helper to format the name
     name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : "Friend"
   };
 }
@@ -106,7 +75,9 @@ export default function Account() {
   const { user, isLoading, isAuthenticated, logout } = useAuth();
   const [, setLocation] = useLocation();
 
-  const [survey, setSurvey] = useState<SurveyResult | null>(null);
+  // Use the survey hook
+  const { survey, isLoading: surveyLoading, error: surveyError } = useSurvey();
+
   const [products, setProducts] = useState<PortalProduct[]>([]);
   const [likedProducts, setLikedProducts] = useState<LikedProduct[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -119,21 +90,6 @@ export default function Account() {
   /*  load dashboard data  */
   useEffect(() => {
     if (!isAuthenticated) return;
-
-// Load user's survey from backend
-fetch("/api/survey-responses", { credentials: "include" })
-  .then(res => res.ok ? res.json() : null)
-  .then(data => {
-    if (data) {
-      setSurvey({
-        id: data.id,
-        completedAt: data.created_at,
-        answers: data.answers,
-      });
-    }
-  })
-  .catch(() => setSurvey(null));
-
 
     // Load liked products
     const likedRaw = localStorage.getItem("liked_products");
@@ -150,7 +106,7 @@ fetch("/api/survey-responses", { credentials: "include" })
             price: p.price,
             imageUrl: p.imageUrl,
             category: p.category,
-            features: [], // Add an empty array for features
+            features: [],
           }));
           setLikedProducts(likedProducts);
         })
@@ -170,14 +126,14 @@ fetch("/api/survey-responses", { credentials: "include" })
       <Header />
       <main className="flex-1 py-16 md:py-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-<div className="mb-8">
-  <h1 className="text-3xl md:text-4xl font-bold font-heading mb-4">
-    Welcome back, {user?.firstName ?? "friend"} 👋
-  </h1>
-  <Button variant="outline" onClick={logout}>
-    Sign Out
-  </Button>
-</div>
+          <div className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold font-heading mb-4">
+              Welcome, {user?.firstName ?? "friend"} 👋
+            </h1>
+            <Button variant="outline" onClick={logout}>
+              Sign Out
+            </Button>
+          </div>
 
           <Tabs defaultValue="products">
             <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2 w-full">
@@ -190,7 +146,9 @@ fetch("/api/survey-responses", { credentials: "include" })
             <TabsContent value="results" className="space-y-4 pt-2">
               <Card>
                 <CardContent className="p-6">
-                  {survey ? (
+                  {surveyLoading ? (
+                    <p>Loading survey…</p>
+                  ) : survey ? (
                     <>
                       <h3 className="font-semibold mb-2">Completed</h3>
                       <p className="text-sm text-muted-foreground">{survey.completedAt}</p>
@@ -199,7 +157,9 @@ fetch("/api/survey-responses", { credentials: "include" })
                       </pre>
                     </>
                   ) : (
-                    <p className="text-muted-foreground">No survey on file.</p>
+                    <p className="text-muted-foreground">
+                      {surveyError ? `Error: ${surveyError}` : "No survey on file."}
+                    </p>
                   )}
                   <Button className="mt-4" onClick={() => setLocation("/survey")}>
                     Retake Survey
@@ -208,6 +168,7 @@ fetch("/api/survey-responses", { credentials: "include" })
               </Card>
             </TabsContent>
 
+            {/* Products tab */}
             <TabsContent value="products" className="space-y-4 pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {products.map((product) => (
@@ -228,6 +189,7 @@ fetch("/api/survey-responses", { credentials: "include" })
               </div>
             </TabsContent>
 
+            {/* Liked products tab */}
             <TabsContent value="liked" className="space-y-4 pt-6">
               {likedProducts.length ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -242,6 +204,7 @@ fetch("/api/survey-responses", { credentials: "include" })
               )}
             </TabsContent>
 
+            {/* Orders tab */}
             <TabsContent value="orders" className="space-y-4 pt-6">
               {orders.length ? (
                 orders.map((o) => (
@@ -261,24 +224,6 @@ fetch("/api/survey-responses", { credentials: "include" })
               ) : (
                 <p className="text-muted-foreground">No orders yet.</p>
               )}
-            </TabsContent>
-
-            <TabsContent value="account" className="space-y-4 pt-6">
-              <Card>
-                <CardContent className="p-6 space-y-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Name</p>
-                    <p className="font-medium">{user?.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Email</p>
-                    <p className="font-medium">{user?.email}</p>
-                  </div>
-                  <Button variant="outline" onClick={logout}>
-                    Log Out
-                  </Button>
-                </CardContent>
-              </Card>
             </TabsContent>
           </Tabs>
         </div>
