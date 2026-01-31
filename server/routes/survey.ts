@@ -9,24 +9,27 @@ router.post("/survey-responses", async (req, res) => {
 
   if (!answers) return res.status(400).json({ message: "Missing survey answers" });
 
-  const client = await pool.connect();
-  try {
-    // Use upsert: if user_id exists, update answers
-    const result = await client.query(
-      `
-      INSERT INTO survey_responses (user_id, session_id, answers)
-      VALUES ($1, $2, $3)
-      ON CONFLICT (user_id)
-      DO UPDATE SET answers = EXCLUDED.answers, created_at = NOW()
-      RETURNING *
-      `,
-      [user?.id ?? null, user ? null : sessionId, answers]
-    );
+const client = await pool.connect();
+try {
+  const result = await client.query(
+    `
+    INSERT INTO survey_responses (user_id, session_id, answers)
+    VALUES ($1, $2, $3)
+    ON CONFLICT (user_id)
+    DO UPDATE SET answers = EXCLUDED.answers, created_at = NOW()
+    RETURNING *
+    `,
+    [user?.id ?? null, user ? null : sessionId, answers]
+  );
 
-    res.json(result.rows[0] || null);
-  } finally {
-    client.release();
-  }
+  res.json(result.rows[0] || null);
+} catch (err) {
+  console.error("Survey insert error:", err);
+  res.status(500).json({ message: "Failed to save survey", details: err });
+} finally {
+  client.release();
+}
+
 });
 
 
