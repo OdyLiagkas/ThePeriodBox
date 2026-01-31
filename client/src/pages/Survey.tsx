@@ -205,7 +205,7 @@ export default function Survey() {
   
   /*  redirect if not logged in  */
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) setLocation("/surveylogin");
+    if (!isLoading && !isAuthenticated) setLocation("/survey-login");
   }, [isLoading, isAuthenticated, setLocation]);
 
   // Generate a session ID when component mounts
