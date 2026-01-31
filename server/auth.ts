@@ -3,6 +3,14 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { User as UserType } from "@shared/models/auth";
+
+declare global {
+  namespace Express {
+    interface User extends UserType {}
+  }
+}
+
 
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID!,

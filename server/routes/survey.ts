@@ -4,11 +4,21 @@ import { pool } from "../db";
 const router = Router();
 
 router.post("/survey-responses", async (req, res) => {
-  const { sessionId, answers } = req.body;
+  console.log("=== DEBUG ===");
+  console.log("req.user:", req.user);
+  console.log("req.user?.id:", req.user?.id);
+  console.log("req.isAuthenticated():", req.isAuthenticated());
+  console.log("=============");
+  const { answers } = req.body;
   const user = req.user as any | undefined;
 
   if (!answers) {
     return res.status(400).json({ message: "Missing survey answers" });
+  }
+  const userId = user?.id || user?.googleId;
+  // Require authentication
+  if (!user?.id) {
+    return res.status(401).json({ message: "Not authenticated" });
   }
 
   const client = await pool.connect();
@@ -20,7 +30,7 @@ router.post("/survey-responses", async (req, res) => {
       VALUES ($1, $2, $3)
       RETURNING *
       `,
-      [user?.id ?? null, user ? null : sessionId ?? null, answers]
+      [user.id, null, answers]  // Always use user.id, session_id is null
     );
 
     res.json(result.rows[0]);

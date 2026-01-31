@@ -15,7 +15,7 @@ export const sessions = pgTable(
 // User storage table modified for Google Auth
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  googleId: varchar("google_id").unique(), // <--- ADD THIS LINE
+  googleId: varchar("google_id").unique(), 
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
