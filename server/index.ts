@@ -68,19 +68,19 @@ app.use("/api", surveyRouter);
 
 (async () => {
 
-  app.get("/api/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-  
-  app.get("/api/auth/google/callback", 
-    passport.authenticate("google", { failureRedirect: "/login" }),
-    (req, res) => res.redirect("/account")
-  );
+app.get("/api/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+
+app.get("/api/auth/google/callback", 
+  passport.authenticate("google", { failureRedirect: "/login" }),
+  (req, res) => res.redirect("/account")
+);
 
   app.get("/api/auth/google-survey", passport.authenticate("google", { scope: ["profile", "email"] }));
   
   app.get("/api/auth/google-survey/callback", 
     passport.authenticate("google", { failureRedirect: "/login" }),
     (req, res) => res.redirect("/survey")
-  );
+  ); 
 
 
 app.get("/api/user", (req, res) => {
