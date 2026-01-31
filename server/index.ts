@@ -77,7 +77,7 @@ app.get("/api/auth/google/callback",
 
   app.get("/api/auth/google-survey", passport.authenticate("google-survey", { scope: ["profile", "email"] }));
   
-  app.get("/api/auth/google-survey/callback", 
+  app.get("/api/auth/google/callback2", 
     passport.authenticate("google-survey", { failureRedirect: "/login" }),
     (req, res) => res.redirect("/survey")
   ); 

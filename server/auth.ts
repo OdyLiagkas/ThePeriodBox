@@ -44,7 +44,7 @@ passport.use("google", new GoogleStrategy({
 passport.use("google-survey", new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    callbackURL: `${process.env.AUTH_REDIRECT_URL}/api/auth/google-survey/callback`,
+    callbackURL: `${process.env.AUTH_REDIRECT_URL}/api/auth/google/callback2`,
   },
   googleVerify
 ));
