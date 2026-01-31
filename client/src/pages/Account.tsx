@@ -9,6 +9,8 @@ import { useEffect, useState } from "react";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductCardNoHeart } from "@/components/ProductCardNoHeart";
 import { useSurvey, SurveyResult } from "@/hooks/useSurvey";
+import { SurveyAnswers } from "@/components/SurveyAnswers";
+
 
 /* ----------  TYPES  ---------- */
 interface PortalProduct {
@@ -143,30 +145,32 @@ export default function Account() {
               <TabsTrigger value="orders">Orders</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="results" className="space-y-4 pt-2">
-              <Card>
-                <CardContent className="p-6">
-                  {surveyLoading ? (
-                    <p>Loading survey…</p>
-                  ) : survey ? (
-                    <>
-                      <h3 className="font-semibold mb-2">Completed</h3>
-                      <p className="text-sm text-muted-foreground">{survey.completedAt}</p>
-                      <pre className="text-xs bg-muted p-3 rounded-md mt-3 overflow-auto">
-                        {JSON.stringify(survey.answers, null, 2)}
-                      </pre>
-                    </>
-                  ) : (
-                    <p className="text-muted-foreground">
-                      {surveyError ? `Error: ${surveyError}` : "No survey on file."}
-                    </p>
-                  )}
-                  <Button className="mt-4" onClick={() => setLocation("/survey")}>
-                    Retake Survey
-                  </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
+<TabsContent value="results" className="space-y-4 pt-2">
+  <Card>
+    <CardContent className="p-6">
+      {surveyLoading ? (
+        <p>Loading survey…</p>
+      ) : survey ? (
+        <>
+          <h3 className="font-semibold mb-2">Completed</h3>
+          <p className="text-sm text-muted-foreground">{survey.completedAt}</p>
+          
+          {/* Prettier display */}
+          <SurveyAnswers answers={survey.answers} className="mt-3" />
+
+        </>
+      ) : (
+        <p className="text-muted-foreground">
+          {surveyError ? `Error: ${surveyError}` : "No survey on file."}
+        </p>
+      )}
+      <Button className="mt-4" onClick={() => setLocation("/survey")}>
+        Retake Survey
+      </Button>
+    </CardContent>
+  </Card>
+</TabsContent>
+
 
             {/* Products tab */}
             <TabsContent value="products" className="space-y-4 pt-6">
