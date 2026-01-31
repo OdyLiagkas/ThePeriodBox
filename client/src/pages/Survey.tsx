@@ -197,15 +197,36 @@ export default function Survey() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   //const { user, isLoading: isAuthLoading, isAuthenticated } = useAuth();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [isComplete, setIsComplete] = useState(false);
   const [sessionId, setSessionId] = useState<string>("");
-    /*  redirect if not logged in  */
-  useEffect(() => {
-    if ( !isAuthenticated) setLocation("/login");
-  }, [isAuthenticated, setLocation]);
+    useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      // Redirect to login with return URL
+      window.location.href = "/login?redirect=/survey";
+    }
+  }, [isLoading, isAuthenticated]);
+
+  // Show loading while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <p>Loading...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Does't render survey if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null;
+  }
+
   // Generate a session ID when component mounts
 //  useEffect(() => {
 //    const id = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
