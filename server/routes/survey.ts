@@ -7,9 +7,12 @@ router.post("/survey-responses", async (req, res) => {
   const { sessionId, answers } = req.body;
   const user = req.user as any | undefined;
 
-  if (!answers) return res.status(400).json({ message: "Missing survey answers" });
+  if (!answers) {
+    return res.status(400).json({ message: "Missing survey answers" });
+  }
 
   const client = await pool.connect();
+
   try {
     const result = await client.query(
       `
@@ -17,14 +20,21 @@ router.post("/survey-responses", async (req, res) => {
       VALUES ($1, $2, $3)
       RETURNING *
       `,
-      [user?.id ?? null, user ? null : sessionId, answers]
+      [user?.id ?? null, user ? null : sessionId ?? null, answers]
     );
 
-    res.json(result.rows[0] || null);
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    console.error("Survey POST error:", err);
+    res.status(500).json({
+      message: "Failed to save survey",
+      error: err.message,
+    });
   } finally {
     client.release();
   }
 });
+
 
 router.get("/survey-responses", async (req, res) => {
   const user = req.user as any | undefined;
