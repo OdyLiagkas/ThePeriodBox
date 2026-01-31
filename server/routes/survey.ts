@@ -30,7 +30,7 @@ router.post("/survey-responses", async (req, res) => {
       VALUES ($1, $2, $3)
       RETURNING *
       `,
-      [user.id, null, answers]  // Always use user.id, session_id is null
+      [user.id, "", answers]  // Always use user.id, session_id is null
     );
 
     res.json(result.rows[0]);
