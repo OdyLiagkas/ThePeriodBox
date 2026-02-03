@@ -241,7 +241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { data, error } = await resend.emails.send({
         from: "onboarding@resend.dev",
         to: ["info@yourperiodbox.com"],
-        reply_to: email,  // email of user who sent message
+        replyTo: email,  // email of user who sent message
         subject: `Contact Form: ${subject}`,
         text: `
 Name: ${name}
