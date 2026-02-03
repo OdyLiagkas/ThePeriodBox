@@ -5,19 +5,19 @@ export function HowItWorksSection() {
   const steps = [
     {
       icon: ClipboardList,
-      title: "Take the Survey → Take the Period Quiz to Get Personalized Results",
+      title: "Take the Period Quiz to Get Personalized Results",
       description: "Answer questions about your flow, lifestyle, and preferences in just 3 minutes. Our algorithm matches you with products that fit your unique needs in one menstruation cycle.",
       color: "from-primary to-primary/80",
     },
     {
       icon: Sparkles,
-      title: "Get Personalized Results → Get Your Personalized Box",
+      title: "Get Your Personalized Box",
       description: "Based on your quiz results, we curate a custom sample box of period products and ship it straight to you, so you can try what's right in one cycle.",
       color: "from-chart-2 to-chart-2/80",
     },
     {
       icon: Package,
-      title: "Discover Your Products → Find What Works (Then Subscribe)",
+      title: "Find What Works (Then Subscribe)",
       description: "Try the products, discover what you love, and reorder or subscribe only to the ones that work for you. Mix and match across products and brands to meet your unique needs.",
       color: "from-chart-3 to-chart-3/80",
     },
