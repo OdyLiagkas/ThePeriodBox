@@ -130,7 +130,7 @@ export default function Account() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
           <div className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold font-heading mb-4">
-              Welcome, {user?.firstName ?? "friend"} 👋
+              Welcome, {user?.firstName ?? "friend"}!
             </h1>
             <Button variant="outline" onClick={logout}>
               Sign Out
