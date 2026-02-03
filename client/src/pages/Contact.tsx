@@ -23,18 +23,35 @@ export default function Contact() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const mailtoLink = `mailto:info@yourperiodbox.com?subject=${encodeURIComponent(formData.subject)}&body=${encodeURIComponent(
-      `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
-    )}`;
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-    window.location.href = mailtoLink;
+      const data = await response.json();
 
-    toast({
-      title: "Opening your email client",
-      description: "Your default email app will open with the message pre-filled.",
-    });
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send");
+      }
 
-    setIsSubmitting(false);
+      toast({
+        title: "Message sent!",
+        description: "We'll get back to you as soon as possible.",
+      });
+
+      // Clear form
+      setFormData({ name: "", email: "", subject: "", message: "" });
+    } catch (error) {
+      toast({
+        title: "Failed to send message",
+        description: "Please try again or email us directly.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertSurveyResponseSchema, type Product } from "@shared/schema";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
+import { Resend } from "resend";
 
 // Seed initial product data
 async function seedInitialData() {
@@ -226,6 +227,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Seed products on startup
   await seedInitialData();
 
+
+ // Contact form endpoint
+  app.post("/api/contact", async (req, res) => {
+    try {
+      const { name, email, subject, message } = req.body;
+
+      // Validate required fields
+      if (!name || !email || !subject || !message) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const { data, error } = await resend.emails.send({
+        from: "onboarding@resend.dev",
+        to: ["info@yourperiodbox.com"],
+        reply_to: email,  // email of user who sent message
+        subject: `Contact Form: ${subject}`,
+        text: `
+Name: ${name}
+Email: ${email}
+Subject: ${subject}
+
+Message:
+${message}
+        `,
+        html: `
+          <h2>New Contact Form Submission</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Subject:</strong> ${subject}</p>
+          <hr/>
+          <p><strong>Message:</strong></p>
+          <p>${message.replace(/\n/g, "<br/>")}</p>
+        `,
+      });
+
+      if (error) {
+        console.error("Resend error:", error);
+        return res.status(500).json({ error: "Failed to send email" });
+      }
+
+      res.json({ success: true, data });
+    } catch (error: any) {
+      console.error("Contact form error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Submit survey response
 app.post("/api/survey-responses", async (req, res) => {
   try {
@@ -281,6 +329,11 @@ app.post("/api/survey-responses", async (req, res) => {
   });
 
   const httpServer = createServer(app);
+
+// Initialize Resend with API key
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+
 
   return httpServer;
 }
