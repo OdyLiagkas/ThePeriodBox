@@ -24,7 +24,7 @@ export function HeroSection() {
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground max-w-xl">
-              Take our personalized survey and find period products perfectly matched to your lifestyle, body, and values. No more guessing—just confidence.
+              Take our personalized survey and find period products that match your lifestyle, needs, and value. No more guessing, just take the survey, get the sample box, and feel confident that your products are right for you.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
@@ -41,16 +41,7 @@ export function HeroSection() {
               </Link>
             </div>
             
-            <div className="flex items-center gap-4 pt-4">
-              <div className="flex -space-x-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-chart-2 border-2 border-background" />
-                ))}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Join <span className="font-semibold text-foreground">10,000+</span> women finding their perfect match
-              </p>
-            </div>
+
           </div>
           
           <div className="relative">
@@ -66,3 +57,15 @@ export function HeroSection() {
     </section>
   );
 }
+/*
+            <div className="flex items-center gap-4 pt-4">
+              <div className="flex -space-x-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-chart-2 border-2 border-background" />
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Join <span className="font-semibold text-foreground">10,000+</span> women finding their perfect match
+              </p>
+            </div>
+*/
