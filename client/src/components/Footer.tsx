@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Instagram, Linkedin, Facebook } from "lucide-react";
+import { Instagram, Linkedin, Music2 } from "lucide-react";
 import logoImage from "@assets/Full_Page_1766110908945.png";
 import { RefreshLink } from "@/components/RefreshLink";
 
@@ -29,15 +29,6 @@ export function Footer() {
               Helping women discover their perfect period products through personalized recommendations.
             </p>
             <div className="flex gap-2">
-                <a
-    href="https://www.instagram.com/"        
-    target="_blank"
-    rel="noopener noreferrer"
-    className="p-2 hover-elevate active-elevate-2 rounded-md"
-    data-testid="link-instagram"
-  >
-                <Instagram className="h-5 w-5" />
-              </a>
               <a
     href="https://www.linkedin.com/company/the-period-box/"        
     target="_blank"
@@ -47,14 +38,23 @@ export function Footer() {
   >
                 <Linkedin className="h-5 w-5" />
               </a>
+                <a
+    href="https://www.instagram.com/the_period_box/"        
+    target="_blank"
+    rel="noopener noreferrer"
+    className="p-2 hover-elevate active-elevate-2 rounded-md"
+    data-testid="link-instagram"
+  >
+                <Instagram className="h-5 w-5" />
+              </a>
               <a
-    href="https://www.facebook.com/"        
+    href="hhttps://www.tiktok.com/@the_period_box_"        
     target="_blank"
     rel="noopener noreferrer"
     className="p-2 hover-elevate active-elevate-2 rounded-md"
     data-testid="link-facebook"
   >
-                <Facebook className="h-5 w-5" />
+                <Music2 className="h-5 w-5" />
               </a>
             </div>
           </div>
