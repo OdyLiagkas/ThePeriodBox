@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { Sparkles, ArrowLeft } from "lucide-react";
+import { Sparkles, ArrowLeft, ArrowRight } from "lucide-react";
 import heroImage from "@assets/Woman_with_box_1766110255116.png";
 
 export function HeroSection() {
@@ -30,8 +30,9 @@ export function HeroSection() {
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/survey" data-testid="link-hero-survey">
                 <Button size="lg" className="text-base font-semibold group">
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   Start Your Journey
-                  <ArrowLeft className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  
                 </Button>
               </Link>
               <Link href="/about" data-testid="link-hero-products">
