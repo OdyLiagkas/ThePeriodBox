@@ -67,7 +67,7 @@ export function Footer() {
                   <span className="text-muted-foreground hover:text-foreground transition-colors">Home</span>
                 </RefreshLink>
               </li>
-{/*              <li>
+            {/*<li>
                 <RefreshLink href="/products" data-testid="link-footer-products">
                   <span className="text-muted-foreground hover:text-foreground transition-colors">Products</span>
                 </RefreshLink>
@@ -89,12 +89,12 @@ export function Footer() {
             <h4 className="font-semibold font-accent mb-4">Support</h4>
             <ul className="space-y-2 text-sm">
               <li>
-  <RefreshLink href="/about#faq" data-testid="link-footer-faq">
-    <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-      FAQ
-    </span>
-  </RefreshLink>
-</li>
+                <RefreshLink href="/about#faq" data-testid="link-footer-faq">
+                  <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                    FAQ
+                  </span>
+                </RefreshLink>
+              </li>
               <li>
                 <RefreshLink href="/contact" data-testid="link-footer-contact">
                   <span className="text-muted-foreground hover:text-foreground transition-colors">Contact Us</span>
@@ -102,7 +102,7 @@ export function Footer() {
               </li>
             </ul>
           </div>
-
+          {/*}
           <div>
             <h4 className="font-semibold font-accent mb-4">Company</h4>
             <ul className="space-y-2 text-sm">
@@ -111,12 +111,12 @@ export function Footer() {
               <li><span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Privacy Policy</span></li>
               <li><span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Terms of Service</span></li>
             </ul>
-          </div>
+          </div> */}
         </div>
 
         <div className="mt-8 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            © 2025 PeriodBox. All rights reserved.
+            © 2026 PeriodBox. All rights reserved.
           </p>
           <div className="flex gap-4 text-sm text-muted-foreground">
             <span className="px-3 py-1 bg-accent/20 text-accent-foreground rounded-full font-medium">Women-owned</span>
