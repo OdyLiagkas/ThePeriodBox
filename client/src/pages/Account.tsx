@@ -148,6 +148,44 @@ function NavItem({ icon, label, value, active, onClick }: NavItemProps) {
   );
 }
 
+/* ----------  PROFILE AVATAR COMPONENT  ---------- */
+interface ProfileAvatarProps {
+  user: any;
+  size?: "sm" | "md" | "lg";
+}
+
+function ProfileAvatar({ user, size = "md" }: ProfileAvatarProps) {
+  const sizeClasses = {
+    sm: "w-8 h-8 text-sm",
+    md: "w-10 h-10 text-base",
+    lg: "w-20 h-20 text-2xl"
+  };
+
+  const imageUrl = user?.profileImageUrl;
+
+  if (imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt={`${user?.firstName || 'User'}'s profile`}
+        className={`${sizeClasses[size]} rounded-full object-cover border-2 border-white shadow-sm`}
+        onError={(e) => {
+          // Fallback to default avatar if image fails to load
+          (e.target as HTMLImageElement).style.display = 'none';
+          (e.target as HTMLImageElement).parentElement?.classList.add('fallback-active');
+        }}
+      />
+    );
+  }
+
+  // Fallback to User icon if no profile image
+  return (
+    <div className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-primary to-chart-2 flex items-center justify-center text-white font-bold`}>
+      <User className={size === "sm" ? "h-4 w-4" : size === "lg" ? "h-10 w-10" : "h-5 w-5"} />
+    </div>
+  );
+}
+
 /* ----------  PRODUCT FEEDBACK CARD  ---------- */
 interface ProductFeedbackCardProps {
   product: PortalProduct;
@@ -529,9 +567,7 @@ export default function Account() {
               <Card className="p-2 sticky top-24 bg-white/80 backdrop-blur-sm border-primary/10">
                 <div className="p-4 mb-2 border-b border-border/50">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-chart-2 flex items-center justify-center text-white font-bold">
-                      <User className="h-5 w-5" />
-                    </div>
+                    <ProfileAvatar user={user} size="md" />
                     <div className="overflow-hidden">
                       <p className="font-semibold truncate">{user?.firstName} {user?.lastName}</p>
                       <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
