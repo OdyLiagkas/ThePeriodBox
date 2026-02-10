@@ -8,7 +8,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useLocation } from "wouter";
 import { CheckCircle2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -16,11 +15,61 @@ interface Question {
   id: string;
   question: string;
   description?: string;
-  type: "single" | "multiple" | "text" | "select-multiple";
+  type: "single" | "multiple" | "text" | "select-multiple" | "dropdown" | "ranking";
   options?: { value: string; label: string }[];
+  maxSelections?: number;
+  conditional?: (answers: Record<string, string | string[]>) => boolean;
 }
 
-const surveyQuestions: Question[] = [
+// Hormonal stage options
+const hormonalStageOptions = [
+  { value: "no-change", label: "Not in a period of hormonal change" },
+  { value: "on-bc", label: "On hormonal birth control for > 2 years (pill, patch, IUD, etc.)" },
+  { value: "stopped-bc", label: "Recently stopped hormonal birth control" },
+  { value: "started-bc", label: "Recently started hormonal birth control" },
+  { value: "pregnant", label: "Currently pregnant" },
+  { value: "postpartum", label: "Postpartum or recently gave birth" },
+  { value: "perimenopausal", label: "Perimenopausal" },
+  { value: "menopausal", label: "Menopausal" },
+];
+
+// Helper to determine which path user is on
+const getUserPath = (answers: Record<string, string | string[]>) => {
+  const stage = answers["hormonal-stage"] as string;
+  if (!stage) return null;
+  if (["no-change", "on-bc", "stopped-bc", "started-bc"].includes(stage)) return "menstruating";
+  if (stage === "pregnant") return "pregnant";
+  if (stage === "postpartum") return "postpartum";
+  if (stage === "perimenopausal") return "perimenopausal";
+  if (stage === "menopausal") return "menopausal";
+  return null;
+};
+
+// Base questions (shown to everyone after hormonal stage)
+const baseQuestions: Question[] = [
+  {
+    id: "hormonal-stage",
+    question: "What is your current hormonal stage?",
+    type: "dropdown",
+    options: hormonalStageOptions,
+  },
+  {
+    id: "goals",
+    question: "What are you looking to get from your customized period box?",
+    description: "Select all that apply.",
+    type: "multiple",
+    options: [
+      { value: "exploring", label: "Exploring new brands" },
+      { value: "better-product", label: "Finding a product that works better for my body" },
+      { value: "new-type", label: "Introducing a new product type" },
+      { value: "switching", label: "Switching products" },
+      { value: "organic", label: "Switch to fully organic products" },
+    ],
+  },
+];
+
+// Menstruating path questions (A, B, C, D selected)
+const menstruatingQuestions: Question[] = [
   {
     id: "flow",
     question: "How would you describe your flow?",
@@ -31,15 +80,6 @@ const surveyQuestions: Question[] = [
       { value: "heavy", label: "Heavy – significant flow, 5+ days" },
       { value: "heavy-then-moderate", label: "Heavy the first ~2 days, moderate days 3/4, light last part of period" },
       { value: "varies", label: "Varies – changes month to month" },
-    ],
-  },
-  {
-    id: "spotting",
-    question: "Do you experience spotting before/after your main flow?",
-    type: "single",
-    options: [
-      { value: "yes", label: "Yes" },
-      { value: "no", label: "No" },
     ],
   },
   {
@@ -111,7 +151,7 @@ const surveyQuestions: Question[] = [
   },
   {
     id: "current-brand",
-    question: "Which brand are you currently using?",
+    question: "Which brand(s) are you currently using?",
     description: "Select all that apply.",
     type: "select-multiple",
     options: [
@@ -171,17 +211,14 @@ const surveyQuestions: Question[] = [
     options: [
       { value: "tampons", label: "Tampons" },
       { value: "pads", label: "Pads" },
-      { value: "cups", label: "Menstrual cups" },
-      { value: "discs", label: "Menstrual discs" },
-      { value: "underwear", label: "Period underwear" },
       { value: "liners", label: "Panty liners" },
     ],
   },
   {
     id: "most-important",
     question: "What's most important to you when trying a new product?",
-    description: "Select your top 2.",
-    type: "multiple",
+    description: "Rank from highest to lowest importance.",
+    type: "ranking",
     options: [
       { value: "comfort", label: "Comfort" },
       { value: "price", label: "Price" },
@@ -193,103 +230,471 @@ const surveyQuestions: Question[] = [
   },
 ];
 
+// Pregnant path questions (E selected)
+const pregnantQuestions: Question[] = [
+  {
+    id: "trimester",
+    question: "I'm currently in my ______ trimester:",
+    type: "single",
+    options: [
+      { value: "1st", label: "1st" },
+      { value: "2nd", label: "2nd" },
+      { value: "3rd", label: "3rd" },
+    ],
+  },
+  {
+    id: "pregnancy-goals",
+    question: "What are you hoping The Period Box can help with?",
+    description: "Select all that apply.",
+    type: "multiple",
+    options: [
+      { value: "discharge", label: "Staying comfortable with increased discharge during pregnancy" },
+      { value: "postpartum-prep", label: "Finding products that may be helpful after delivery (postpartum bleeding)" },
+      { value: "period-return", label: "Preparing for when my period returns after pregnancy" },
+      { value: "bladder-leakage", label: "Managing light bladder leakage during pregnancy or postpartum" },
+      { value: "gentle-skin", label: "Finding products that are gentle on sensitive skin" },
+      { value: "absorbency", label: "Needing different absorbency levels during postpartum recovery" },
+    ],
+  },
+  {
+    id: "protection-timing",
+    question: "When do you most need protection?",
+    type: "single",
+    options: [
+      { value: "overnight", label: "Overnight" },
+      { value: "day", label: "During the day at work or home" },
+      { value: "active", label: "While moving or being active" },
+      { value: "resting", label: "At home / resting" },
+    ],
+  },
+  {
+    id: "organic-preference-pregnant",
+    question: "Do you prefer organic / natural materials?",
+    type: "single",
+    options: [
+      { value: "always", label: "Yes, always" },
+      { value: "sometimes", label: "Sometimes / open to trying" },
+      { value: "not-important", label: "Not important to me" },
+    ],
+  },
+  {
+    id: "sensitivities-pregnant",
+    question: "Do you have any sensitivities?",
+    type: "multiple",
+    options: [
+      { value: "fragrance", label: "Fragrance sensitivity" },
+      { value: "latex", label: "Latex allergy" },
+      { value: "hypoallergenic", label: "Prefer hypoallergenic materials" },
+      { value: "none", label: "No known sensitivities" },
+    ],
+  },
+  {
+    id: "most-important-pregnant",
+    question: "What's most important to you when trying a new product?",
+    description: "Rank from highest to lowest importance.",
+    type: "ranking",
+    options: [
+      { value: "comfort", label: "Comfort" },
+      { value: "price", label: "Price" },
+      { value: "sustainability", label: "Sustainability" },
+      { value: "brand-reputation", label: "Brand reputation" },
+      { value: "organic", label: "Organic/natural ingredients" },
+      { value: "leak-protection", label: "Leak protection" },
+    ],
+  },
+  {
+    id: "additional-notes-pregnant",
+    question: "Is there anything else you want us to know about your body or comfort right now?",
+    type: "text",
+  },
+];
+
+// Postpartum path questions (F selected)
+const postpartumQuestions: Question[] = [
+  {
+    id: "postpartum-timeline",
+    question: "How far postpartum are you?",
+    type: "single",
+    options: [
+      { value: "0-2", label: "0 - 2 weeks" },
+      { value: "2-6", label: "2 - 6 weeks" },
+      { value: "6-12", label: "6 - 12 weeks" },
+      { value: "3-6", label: "3 - 6 months" },
+      { value: "6+", label: "More than 6 months" },
+    ],
+  },
+  {
+    id: "postpartum-experience",
+    question: "What best describes what you're experiencing right now?",
+    type: "single",
+    options: [
+      { value: "heavy", label: "Heavy bleeding (changing frequently)" },
+      { value: "moderate", label: "Moderate bleeding" },
+      { value: "light", label: "Light bleeding or spotting" },
+      { value: "discharge", label: "Mostly discharge, little to no bleeding" },
+      { value: "varies", label: "It varies day to day" },
+    ],
+  },
+  {
+    id: "bleeding-appearance",
+    question: "What does your bleeding or discharge look like most of the time?",
+    type: "single",
+    options: [
+      { value: "bright-red", label: "Bright red" },
+      { value: "dark-red", label: "Dark red or brown" },
+      { value: "pink", label: "Pink" },
+      { value: "yellow-white", label: "Yellow or white" },
+      { value: "unsure", label: "Unsure / changes often" },
+    ],
+  },
+  {
+    id: "delivery-method",
+    question: "How did you deliver?",
+    type: "single",
+    options: [
+      { value: "vaginal", label: "Vaginal delivery" },
+      { value: "cesarean", label: "Cesarean section" },
+      { value: "assisted", label: "Assisted vaginal delivery (forceps/vacuum)" },
+      { value: "other", label: "Other" },
+    ],
+  },
+  {
+    id: "tenderness",
+    question: "Are you experiencing tenderness or sensitivity?",
+    description: "Select all that apply.",
+    type: "multiple",
+    options: [
+      { value: "perineal", label: "Perineal soreness or stitches" },
+      { value: "c-section", label: "C-section incision sensitivity" },
+      { value: "pelvic", label: "General pelvic discomfort" },
+      { value: "none", label: "No significant sensitivity" },
+    ],
+  },
+  {
+    id: "bladder-leakage-postpartum",
+    question: "Are you experiencing bladder leakage?",
+    type: "single",
+    options: [
+      { value: "frequently", label: "Yes, frequently" },
+      { value: "occasionally", label: "Yes, occasionally" },
+      { value: "no", label: "No" },
+    ],
+  },
+  {
+    id: "organic-preference-postpartum",
+    question: "Do you prefer organic / natural materials?",
+    type: "single",
+    options: [
+      { value: "always", label: "Yes, always" },
+      { value: "sometimes", label: "Sometimes / open to trying" },
+      { value: "not-important", label: "Not important to me" },
+    ],
+  },
+  {
+    id: "sensitivities-postpartum",
+    question: "Do you have any sensitivities?",
+    type: "multiple",
+    options: [
+      { value: "fragrance", label: "Fragrance sensitivity" },
+      { value: "latex", label: "Latex allergy" },
+      { value: "hypoallergenic", label: "Prefer hypoallergenic materials" },
+      { value: "none", label: "No known sensitivities" },
+    ],
+  },
+  {
+    id: "protection-timing-postpartum",
+    question: "When do you most need protection?",
+    type: "single",
+    options: [
+      { value: "overnight", label: "Overnight" },
+      { value: "day", label: "During the day at work or home" },
+      { value: "active", label: "While moving or being active" },
+      { value: "resting", label: "At home / resting" },
+    ],
+  },
+  {
+    id: "most-important-postpartum",
+    question: "What's most important to you when trying a new product?",
+    description: "Rank from highest to lowest importance.",
+    type: "ranking",
+    options: [
+      { value: "comfort", label: "Comfort" },
+      { value: "price", label: "Price" },
+      { value: "sustainability", label: "Sustainability" },
+      { value: "brand-reputation", label: "Brand reputation" },
+      { value: "organic", label: "Organic/natural ingredients" },
+      { value: "leak-protection", label: "Leak protection" },
+    ],
+  },
+  {
+    id: "additional-notes-postpartum",
+    question: "Is there anything else you want us to know about your body or comfort right now?",
+    type: "text",
+  },
+];
+
+// Perimenopausal path questions (G selected)
+const perimenopausalQuestions: Question[] = [
+  {
+    id: "peri-status",
+    question: "Which best describes you right now?",
+    type: "single",
+    options: [
+      { value: "diagnosed", label: "I've been told I'm in perimenopause" },
+      { value: "suspect", label: "I think I may be in perimenopause" },
+      { value: "unsure", label: "I'm not sure, but my cycle has changed" },
+      { value: "none", label: "None of the above" },
+    ],
+  },
+  {
+    id: "age-range",
+    question: "Which age range are you in?",
+    type: "single",
+    options: [
+      { value: "under-40", label: "Under 40" },
+      { value: "40-44", label: "40 - 44" },
+      { value: "45-49", label: "45 - 49" },
+      { value: "50-54", label: "50 - 54" },
+      { value: "54+", label: "> 54" },
+    ],
+  },
+  {
+    id: "predictability",
+    question: "How predictable are your periods right now?",
+    type: "single",
+    options: [
+      { value: "very", label: "Very predictable" },
+      { value: "somewhat", label: "Somewhat unpredictable" },
+      { value: "highly", label: "Highly unpredictable" },
+      { value: "skip", label: "I skip periods sometimes" },
+    ],
+  },
+  {
+    id: "flow-changes",
+    question: "How has your flow changed recently?",
+    description: "Select all that apply.",
+    type: "multiple",
+    options: [
+      { value: "heavier", label: "Heavier than before" },
+      { value: "lighter", label: "Lighter than before" },
+      { value: "longer", label: "Longer periods" },
+      { value: "shorter", label: "Shorter periods" },
+      { value: "spotting", label: "Spotting between periods" },
+      { value: "varies", label: "It varies month to month" },
+    ],
+  },
+  {
+    id: "peri-symptoms",
+    question: "Do you experience any of the following?",
+    description: "Select all that apply.",
+    type: "multiple",
+    options: [
+      { value: "gushes", label: "Sudden heavy \"gushes\"" },
+      { value: "clots", label: "Blood clots" },
+      { value: "flooding", label: "Flooding or overflow" },
+      { value: "none", label: "None of the above" },
+    ],
+  },
+  {
+    id: "spotting-frequency",
+    question: "Do you experience spotting or unexpected bleeding?",
+    type: "single",
+    options: [
+      { value: "frequently", label: "Frequently" },
+      { value: "occasionally", label: "Occasionally" },
+      { value: "rarely", label: "Rarely" },
+      { value: "never", label: "Never" },
+    ],
+  },
+  {
+    id: "leak-worry",
+    question: "Do you worry about leaks overnight or during long stretches?",
+    type: "single",
+    options: [
+      { value: "often", label: "Yes, often" },
+      { value: "sometimes", label: "Sometimes" },
+      { value: "rarely", label: "Rarely" },
+    ],
+  },
+  {
+    id: "internal-products",
+    question: "How do you feel about internal products right now?",
+    type: "single",
+    options: [
+      { value: "prefer", label: "I prefer them" },
+      { value: "occasionally", label: "I use them occasionally" },
+      { value: "avoid", label: "I avoid them now" },
+      { value: "stopped", label: "I've stopped using them entirely" },
+    ],
+  },
+  {
+    id: "discomfort-timing",
+    question: "When do leaks or discomfort bother you most?",
+    description: "Select all that apply.",
+    type: "multiple",
+    options: [
+      { value: "overnight", label: "Overnight" },
+      { value: "exercise", label: "During exercise or movement" },
+      { value: "day", label: "During the day" },
+      { value: "traveling", label: "While traveling" },
+    ],
+  },
+  {
+    id: "additional-notes-peri",
+    question: "Is there anything else you want us to know about your body or comfort right now?",
+    type: "text",
+  },
+];
+
+// Menopausal path questions (H selected)
+const menopausalQuestions: Question[] = [
+  {
+    id: "meno-status",
+    question: "Which best describes you right now?",
+    type: "single",
+    options: [
+      { value: "12-months", label: "I have not had a period in 12 months or more" },
+      { value: "unsure", label: "I'm not sure, but my periods have stopped" },
+      { value: "hormone-therapy", label: "I'm using hormone therapy and do not have periods" },
+      { value: "none", label: "None of the above" },
+    ],
+  },
+  {
+    id: "time-since",
+    question: "About how long has it been since your last period?",
+    type: "single",
+    options: [
+      { value: "12-18", label: "12 - 18 months" },
+      { value: "18-24", label: "18 - 24 months" },
+      { value: "2-5", label: "2 - 5 years" },
+      { value: "5+", label: "More than 5 years" },
+    ],
+  },
+  {
+    id: "daily-protection",
+    question: "Do you use protection for daily moisture or discharge?",
+    type: "single",
+    options: [
+      { value: "daily", label: "Yes, daily" },
+      { value: "occasionally", label: "Occasionally" },
+      { value: "no", label: "No" },
+    ],
+  },
+  {
+    id: "bladder-leakage-meno",
+    question: "Are you experiencing bladder leakage?",
+    type: "single",
+    options: [
+      { value: "frequently", label: "Yes, frequently" },
+      { value: "occasionally", label: "Yes, occasionally" },
+      { value: "no", label: "No" },
+    ],
+  },
+  {
+    id: "discomfort-timing-meno",
+    question: "When do leaks or discomfort bother you most?",
+    description: "Select all that apply.",
+    type: "multiple",
+    options: [
+      { value: "overnight", label: "Overnight" },
+      { value: "exercise", label: "During exercise or movement" },
+      { value: "day", label: "During the day" },
+      { value: "traveling", label: "While traveling" },
+    ],
+  },
+  {
+    id: "additional-notes-meno",
+    question: "Is there anything else you want us to know about your body or comfort right now?",
+    type: "text",
+  },
+];
+
+// Combine all questions with conditional logic
+const getAllQuestions = (): Question[] => {
+  return [
+    ...baseQuestions,
+    ...menstruatingQuestions.map(q => ({
+      ...q,
+      conditional: (answers: Record<string, string | string[]>) => getUserPath(answers) === "menstruating"
+    })),
+    ...pregnantQuestions.map(q => ({
+      ...q,
+      conditional: (answers: Record<string, string | string[]>) => getUserPath(answers) === "pregnant"
+    })),
+    ...postpartumQuestions.map(q => ({
+      ...q,
+      conditional: (answers: Record<string, string | string[]>) => getUserPath(answers) === "postpartum"
+    })),
+    ...perimenopausalQuestions.map(q => ({
+      ...q,
+      conditional: (answers: Record<string, string | string[]>) => getUserPath(answers) === "perimenopausal"
+    })),
+    ...menopausalQuestions.map(q => ({
+      ...q,
+      conditional: (answers: Record<string, string | string[]>) => getUserPath(answers) === "menopausal"
+    })),
+  ];
+};
+
 export default function Survey() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  //const { user, isLoading: isAuthLoading, isAuthenticated } = useAuth();
   const { user, isAuthenticated, isLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [isComplete, setIsComplete] = useState(false);
-  const [sessionId, setSessionId] = useState<string>("");
   
+  // Get dynamic question list based on current answers
+  const [surveyQuestions, setSurveyQuestions] = useState<Question[]>(getAllQuestions());
+  
+  // Filter questions based on conditional logic
+  const visibleQuestions = surveyQuestions.filter(q => 
+    !q.conditional || q.conditional(answers)
+  );
+
   /*  redirect if not logged in  */
   useEffect(() => {
     if (!isLoading && !isAuthenticated) setLocation("/survey-login");
   }, [isLoading, isAuthenticated, setLocation]);
 
-  // Generate a session ID when component mounts
-//  useEffect(() => {
-//    const id = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-//    setSessionId(id);
-//  }, []);
-
-/*const submitSurvey = useMutation({
-  mutationFn: async (surveyData: { sessionId: string; answers: Record<string, string | string[]> }) => {
-    // OFFLINE: write to localStorage instead of calling API
-    localStorage.setItem("demo_survey", JSON.stringify(surveyData.answers));
-    localStorage.setItem("demo_survey_date", new Date().toISOString());
-    return { ok: true };
-  },
-  onSuccess: () => {
-  if (isAuthenticated) {
-    setLocation("/account");
-  } else {
-    setIsComplete(true);
-  }
-},
-
-  onError: (error) =>
-    toast({ title: "Error", description: error.message, variant: "destructive" }),
-});
-*/
-
-const submitSurvey = useMutation({
-  mutationFn: async (surveyData: { answers: Record<string, string | string[]> }) => {
-    if (!isAuthenticated || !user?.googleId) {
-      throw new Error("You must be logged in to submit a survey.");
+  // Update visible questions when answers change (for path switching)
+  useEffect(() => {
+    setSurveyQuestions(getAllQuestions());
+    // Reset step if current step is now beyond visible questions
+    if (currentStep >= visibleQuestions.length && visibleQuestions.length > 0) {
+      setCurrentStep(visibleQuestions.length - 1);
     }
+  }, [answers]);
 
-    // POST to backend with credentials included
-    const res = await fetch("/api/survey-responses", {
-      method: "POST",
-      credentials: "include", // <-- MUST include cookies for authentication
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(surveyData),
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({ message: res.statusText }));
-      throw new Error(errorData.message || "Failed to submit survey");
-    }
-
-    return res.json();
-  },
-
-  onSuccess: (data) => {
-    console.log("Survey submitted successfully:", data);
-
-    // Redirect logged-in users to account page
-    if (isAuthenticated) {
-      setIsComplete(true);
-    } else {
-      // For anonymous users, show completion state
-      setIsComplete(true);
-    }
-  },
-
-  onError: (error: any) => {
-    toast({
-      title: "Error submitting survey",
-      description: error.message,
-      variant: "destructive",
-    });
-  },
-});
-
-
-
-  /*
   const submitSurvey = useMutation({
-    mutationFn: async (surveyData: { sessionId: string; answers: Record<string, string | string[]> }) => {
-      return await apiRequest("POST", "/api/survey-responses", surveyData);
+    mutationFn: async (surveyData: { answers: Record<string, string | string[]> }) => {
+      if (!isAuthenticated || !user?.googleId) {
+        throw new Error("You must be logged in to submit a survey.");
+      }
+
+      const res = await fetch("/api/survey-responses", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(surveyData),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ message: res.statusText }));
+        throw new Error(errorData.message || "Failed to submit survey");
+      }
+
+      return res.json();
     },
-    onSuccess: () => {
+
+    onSuccess: (data) => {
+      console.log("Survey submitted successfully:", data);
       setIsComplete(true);
     },
-    onError: (error: Error) => {
+
+    onError: (error: any) => {
       toast({
         title: "Error submitting survey",
         description: error.message,
@@ -297,24 +702,25 @@ const submitSurvey = useMutation({
       });
     },
   });
-*/
-  const currentQuestion = surveyQuestions[currentStep];
-  const isLastQuestion = currentStep === surveyQuestions.length - 1;
+
+  const currentQuestion = visibleQuestions[currentStep];
+  const isLastQuestion = currentStep === visibleQuestions.length - 1;
+  const progressStep = currentStep + 1;
+  const totalSteps = visibleQuestions.length;
 
   const handleAnswer = (value: string | string[]) => {
     setAnswers({ ...answers, [currentQuestion.id]: value });
   };
 
-const handleNext = () => {
-  if (isLastQuestion) {
-    submitSurvey.mutate({ answers }); 
-    console.log("Survey completed with answers:", answers);
-  } else {
-    setCurrentStep(currentStep + 1);
-    console.log(`Moving to question ${currentStep + 2}`);
-  }
-};
-
+  const handleNext = () => {
+    if (isLastQuestion) {
+      submitSurvey.mutate({ answers }); 
+      console.log("Survey completed with answers:", answers);
+    } else {
+      setCurrentStep(currentStep + 1);
+      console.log(`Moving to question ${currentStep + 2}`);
+    }
+  };
 
   const handlePrevious = () => {
     setCurrentStep(currentStep - 1);
@@ -323,14 +729,25 @@ const handleNext = () => {
 
   const canProceed = () => {
     const answer = answers[currentQuestion.id];
+    if (!answer) return false;
+    
     if (currentQuestion.type === "multiple" || currentQuestion.type === "select-multiple") {
       const answerArray = Array.isArray(answer) ? answer : [];
-      // For "most-important" question, limit to 2 selections
-      if (currentQuestion.id === "most-important") {
-        return answerArray.length > 0 && answerArray.length <= 2;
+      if (currentQuestion.maxSelections) {
+        return answerArray.length > 0 && answerArray.length <= currentQuestion.maxSelections;
       }
       return answerArray.length > 0;
     }
+    
+    if (currentQuestion.type === "ranking") {
+      const answerArray = Array.isArray(answer) ? answer : [];
+      return answerArray.length === currentQuestion.options?.length;
+    }
+    
+    if (currentQuestion.type === "text") {
+      return typeof answer === "string" && answer.trim().length > 0;
+    }
+    
     return Boolean(answer);
   };
 
@@ -417,6 +834,19 @@ const handleNext = () => {
     );
   }
 
+  // Don't render until we have a current question
+  if (!currentQuestion) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">Loading...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -433,8 +863,8 @@ const handleNext = () => {
             </div>
 
             <SurveyProgress 
-              currentStep={currentStep + 1} 
-              totalSteps={surveyQuestions.length} 
+              currentStep={progressStep} 
+              totalSteps={totalSteps} 
             />
 
             <SurveyQuestion
