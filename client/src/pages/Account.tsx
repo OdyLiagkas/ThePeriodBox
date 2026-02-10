@@ -2,7 +2,6 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
@@ -10,7 +9,17 @@ import { ProductCard } from "@/components/ProductCard";
 import { ProductCardNoHeart } from "@/components/ProductCardNoHeart";
 import { useSurvey, SurveyResult } from "@/hooks/useSurvey";
 import { SurveyAnswers } from "@/components/SurveyAnswers";
-
+import { 
+  Package, 
+  History, 
+  ClipboardList, 
+  ShoppingBag, 
+  ThumbsUp, 
+  ThumbsDown,
+  Sparkles,
+  LogOut,
+  User
+} from "lucide-react";
 
 /* ----------  TYPES  ---------- */
 interface PortalProduct {
@@ -21,6 +30,7 @@ interface PortalProduct {
   imageUrl: string;
   category: string;
   matchReasons: string[];
+  feedback?: 'positive' | 'negative' | null;
 }
 
 interface Order {
@@ -40,6 +50,8 @@ interface LikedProduct {
   category: string;
   features: string[];
 }
+
+type TabValue = 'box' | 'history' | 'survey' | 'orders';
 
 /* ----------  DEMO AUTH HOOK  ---------- */
 function useAuth() {
@@ -72,10 +84,155 @@ function useAuth() {
   };
 }
 
+/* ----------  MOCK DATA FOR YOUR BOX  ---------- */
+const MOCK_BOX_PRODUCTS: PortalProduct[] = [
+  {
+    id: "box-1",
+    name: "Organic Cotton Tampons",
+    description: "Ultra-absorbent organic cotton tampons with biodegradable applicator",
+    price: "$0.00",
+    imageUrl: "/api/placeholder/300/300",
+    category: "Tampons",
+    matchReasons: ["Based on your flow preference", "Eco-friendly choice", "Recommended for active lifestyle"],
+    feedback: null
+  },
+  {
+    id: "box-2",
+    name: "Period Underwear",
+    description: "Leak-proof, comfortable period underwear for medium flow days",
+    price: "$0.00",
+    imageUrl: "/api/placeholder/300/300",
+    category: "Underwear",
+    matchReasons: ["Matches your comfort priority", "Reusable option", "Great for overnight"],
+    feedback: null
+  },
+  {
+    id: "box-3",
+    name: "Menstrual Cup",
+    description: "Medical-grade silicone cup, size medium",
+    price: "$0.00",
+    imageUrl: "/api/placeholder/300/300",
+    category: "Cup",
+    matchReasons: ["Long-lasting protection", "Zero waste option", "Cost-effective"],
+    feedback: null
+  }
+];
+
+/* ----------  SIDEBAR NAV ITEM  ---------- */
+interface NavItemProps {
+  icon: React.ReactNode;
+  label: string;
+  value: TabValue;
+  active: boolean;
+  onClick: (value: TabValue) => void;
+}
+
+function NavItem({ icon, label, value, active, onClick }: NavItemProps) {
+  return (
+    <button
+      onClick={() => onClick(value)}
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 group ${
+        active 
+          ? "bg-gradient-to-r from-primary/20 to-chart-2/20 text-primary font-semibold shadow-sm" 
+          : "text-muted-foreground hover:bg-primary/5 hover:text-foreground"
+      }`}
+    >
+      <span className={`${active ? "text-primary" : "text-muted-foreground group-hover:text-primary"} transition-colors`}>
+        {icon}
+      </span>
+      <span className="font-medium">{label}</span>
+      {active && (
+        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+      )}
+    </button>
+  );
+}
+
+/* ----------  PRODUCT FEEDBACK CARD  ---------- */
+interface ProductFeedbackCardProps {
+  product: PortalProduct;
+  onFeedback: (productId: string, type: 'positive' | 'negative') => void;
+}
+
+function ProductFeedbackCard({ product, onFeedback }: ProductFeedbackCardProps) {
+  return (
+    <Card className="overflow-hidden border-border/50 hover:shadow-lg transition-all duration-300 group">
+      <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-primary/5 to-chart-2/5">
+        <img 
+          src={product.imageUrl} 
+          alt={product.name}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      </div>
+      
+      <CardContent className="p-5 space-y-4">
+        <div>
+          <Badge variant="secondary" className="mb-2 bg-primary/10 text-primary border-0">
+            {product.category}
+          </Badge>
+          <h3 className="font-bold text-lg font-heading">{product.name}</h3>
+          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{product.description}</p>
+        </div>
+
+        {product.matchReasons && product.matchReasons.length > 0 && (
+          <div className="space-y-2 bg-gradient-to-r from-primary/5 to-chart-2/5 p-3 rounded-lg">
+            <p className="text-xs font-semibold text-primary flex items-center gap-1">
+              <Sparkles className="h-3 w-3" />
+              Why we picked this
+            </p>
+            <ul className="text-xs text-muted-foreground space-y-1">
+              {product.matchReasons.map((reason, idx) => (
+                <li key={idx} className="flex items-start gap-1.5">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>{reason}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="pt-2 border-t border-border/50">
+          <p className="text-xs text-muted-foreground mb-3 font-medium">How was this match?</p>
+          <div className="flex gap-2">
+            <Button
+              variant={product.feedback === 'positive' ? 'default' : 'outline'}
+              size="sm"
+              className={`flex-1 gap-2 transition-all ${
+                product.feedback === 'positive' 
+                  ? 'bg-gradient-to-r from-primary to-chart-2 text-white border-0' 
+                  : 'hover:border-primary hover:text-primary'
+              }`}
+              onClick={() => onFeedback(product.id, 'positive')}
+            >
+              <ThumbsUp className="h-4 w-4" />
+              Love it
+            </Button>
+            <Button
+              variant={product.feedback === 'negative' ? 'default' : 'outline'}
+              size="sm"
+              className={`flex-1 gap-2 transition-all ${
+                product.feedback === 'negative' 
+                  ? 'bg-destructive text-white border-0' 
+                  : 'hover:border-destructive hover:text-destructive'
+              }`}
+              onClick={() => onFeedback(product.id, 'negative')}
+            >
+              <ThumbsDown className="h-4 w-4" />
+              Not for me
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 /* ----------  PAGE  ---------- */
 export default function Account() {
   const { user, isLoading, isAuthenticated, logout } = useAuth();
   const [, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState<TabValue>('box');
 
   // Use the survey hook
   const { survey, isLoading: surveyLoading, error: surveyError } = useSurvey();
@@ -83,6 +240,7 @@ export default function Account() {
   const [products, setProducts] = useState<PortalProduct[]>([]);
   const [likedProducts, setLikedProducts] = useState<LikedProduct[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [boxProducts, setBoxProducts] = useState<PortalProduct[]>(MOCK_BOX_PRODUCTS);
 
   /*  redirect if not logged in  */
   useEffect(() => {
@@ -120,118 +278,308 @@ export default function Account() {
     fetch("/api/account/orders.json").then((r) => r.json()).then(setOrders).catch(() => {});
   }, [isAuthenticated]);
 
-  if (isLoading) return <p className="p-8">Loading portal…</p>;
+  const handleProductFeedback = (productId: string, type: 'positive' | 'negative') => {
+    setBoxProducts(prev => prev.map(p => 
+      p.id === productId ? { ...p, feedback: type } : p
+    ));
+    // Here you would typically send to API: fetch('/api/feedback', { method: 'POST', body: JSON.stringify({ productId, type }) })
+  };
+
+  if (isLoading) return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-chart-2/5 to-chart-3/5">
+      <div className="flex items-center gap-2 text-primary">
+        <Sparkles className="h-5 w-5 animate-pulse" />
+        <span className="font-semibold">Loading portal...</span>
+      </div>
+    </div>
+  );
+  
   if (!isAuthenticated) return null; // redirect in progress
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'box':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold font-heading">Your Box</h2>
+                <p className="text-muted-foreground">Curated products based on your survey results</p>
+              </div>
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/10 to-chart-2/10 rounded-full text-sm font-medium text-primary">
+                <Sparkles className="h-4 w-4" />
+                Personalized for you
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {boxProducts.map((product) => (
+                <ProductFeedbackCard 
+                  key={product.id} 
+                  product={product} 
+                  onFeedback={handleProductFeedback}
+                />
+              ))}
+            </div>
+
+            <Card className="bg-gradient-to-r from-primary/5 via-chart-2/5 to-chart-3/5 border-primary/20">
+              <CardContent className="p-6 flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold font-heading">Want different products?</h3>
+                  <p className="text-sm text-muted-foreground">Retake the survey to update your preferences</p>
+                </div>
+                <Button onClick={() => setLocation("/survey")} className="gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Update Preferences
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case 'history':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold font-heading">History</h2>
+              <p className="text-muted-foreground">Your past boxes and product feedback</p>
+            </div>
+            
+            {boxProducts.some(p => p.feedback) ? (
+              <div className="space-y-4">
+                {boxProducts.filter(p => p.feedback).map(product => (
+                  <Card key={product.id} className="overflow-hidden">
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <img src={product.imageUrl} alt={product.name} className="w-16 h-16 rounded-lg object-cover" />
+                      <div className="flex-1">
+                        <h3 className="font-semibold">{product.name}</h3>
+                        <p className="text-sm text-muted-foreground">{product.category}</p>
+                      </div>
+                      <Badge 
+                        variant={product.feedback === 'positive' ? 'default' : 'destructive'}
+                        className={product.feedback === 'positive' ? 'bg-gradient-to-r from-primary to-chart-2' : ''}
+                      >
+                        {product.feedback === 'positive' ? 'Liked' : 'Disliked'}
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="bg-gradient-to-br from-primary/5 to-chart-2/5 border-dashed">
+                <CardContent className="p-12 text-center">
+                  <History className="h-12 w-12 text-primary/40 mx-auto mb-4" />
+                  <h3 className="font-semibold text-lg mb-2">No history yet</h3>
+                  <p className="text-muted-foreground mb-4">Start giving feedback on your box products to build your history</p>
+                  <Button variant="outline" onClick={() => setActiveTab('box')}>View Your Box</Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        );
+
+      case 'survey':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold font-heading">Survey Results</h2>
+              <p className="text-muted-foreground">Your personalized profile and preferences</p>
+            </div>
+
+            <Card className="overflow-hidden border-primary/20">
+              <div className="bg-gradient-to-r from-primary/10 via-chart-2/10 to-chart-3/10 p-6 border-b border-primary/10">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white rounded-lg shadow-sm">
+                    <ClipboardList className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold font-heading">Your Profile</h3>
+                    <p className="text-sm text-muted-foreground">Completed on {survey?.completedAt || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <CardContent className="p-6">
+                {surveyLoading ? (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Sparkles className="h-4 w-4 animate-pulse" />
+                    Loading survey...
+                  </div>
+                ) : survey ? (
+                  <div className="space-y-6">
+                    <SurveyAnswers answers={survey.answers} />
+                    
+                    <div className="pt-4 border-t border-border/50">
+                      <Button 
+                        onClick={() => setLocation("/survey")} 
+                        className="w-full sm:w-auto gap-2 bg-gradient-to-r from-primary to-chart-2 hover:opacity-90 transition-opacity"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        Retake Survey
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground mb-4">
+                      {surveyError ? `Error: ${surveyError}` : "No survey on file."}
+                    </p>
+                    <Button onClick={() => setLocation("/survey")} className="gap-2">
+                      <Sparkles className="h-4 w-4" />
+                      Take Survey
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case 'orders':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold font-heading">Orders</h2>
+              <p className="text-muted-foreground">Track your shipments and view past orders</p>
+            </div>
+
+            {orders.length ? (
+              <div className="space-y-4">
+                {orders.map((order) => (
+                  <Card key={order.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                    <CardContent className="p-0">
+                      <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-primary/5 to-chart-2/5 border-b border-border/50">
+                        <div className="flex items-center gap-4">
+                          <div className="p-2 bg-white rounded-lg shadow-sm">
+                            <ShoppingBag className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-semibold font-heading">Order #{order.id}</p>
+                            <p className="text-sm text-muted-foreground">{order.date}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="font-bold text-lg">{order.total}</span>
+                          <Badge className="bg-gradient-to-r from-primary to-chart-2 text-white border-0">
+                            {order.status}
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      {order.items && (
+                        <div className="p-4 space-y-2">
+                          {order.items.map((item, idx) => (
+                            <div key={idx} className="flex justify-between text-sm">
+                              <span className="text-muted-foreground">{item.name} × {item.qty}</span>
+                              <span className="font-medium">{item.price}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="bg-gradient-to-br from-primary/5 to-chart-2/5 border-dashed">
+                <CardContent className="p-12 text-center">
+                  <ShoppingBag className="h-12 w-12 text-primary/40 mx-auto mb-4" />
+                  <h3 className="font-semibold text-lg mb-2">No orders yet</h3>
+                  <p className="text-muted-foreground mb-4">Your subscription box will appear here once shipped</p>
+                  <Button variant="outline" onClick={() => setActiveTab('box')}>View Your Box</Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        );
+    }
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-primary/5 via-chart-2/5 to-chart-3/5">
       <Header />
-      <main className="flex-1 py-16 md:py-24">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-          <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold font-heading mb-4">
-              Welcome, {user?.firstName ?? "friend"}!
-            </h1>
-            <Button variant="outline" onClick={logout}>
+      
+      <main className="flex-1 py-8 md:py-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+          {/* Welcome Header */}
+          <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold font-heading mb-2">
+                Welcome back,{" "}
+                <span className="bg-gradient-to-r from-primary via-chart-2 to-chart-3 bg-clip-text text-transparent">
+                  {user?.firstName ?? "friend"}
+                </span>
+              </h1>
+              <p className="text-muted-foreground">Manage your personalized period care experience</p>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={logout}
+              className="gap-2 self-start sm:self-auto hover:bg-destructive/10 hover:text-destructive hover:border-destructive transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
               Sign Out
             </Button>
           </div>
 
-          <Tabs defaultValue="products">
-            <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2 w-full">
-              <TabsTrigger value="products">For You</TabsTrigger>
-              <TabsTrigger value="liked">Liked</TabsTrigger>
-              <TabsTrigger value="results">Survey Results</TabsTrigger>
-              <TabsTrigger value="orders">Orders</TabsTrigger>
-            </TabsList>
-
-<TabsContent value="results" className="space-y-4 pt-2">
-  <Card>
-    <CardContent className="p-6">
-      {surveyLoading ? (
-        <p>Loading survey…</p>
-      ) : survey ? (
-        <>
-          <h3 className="font-semibold mb-2">Completed</h3>
-          <p className="text-sm text-muted-foreground">{survey.completedAt}</p>
-          
-          {/* Prettier display */}
-          <SurveyAnswers answers={survey.answers} className="mt-3" />
-
-        </>
-      ) : (
-        <p className="text-muted-foreground">
-          {surveyError ? `Error: ${surveyError}` : "No survey on file."}
-        </p>
-      )}
-      <Button className="mt-4" onClick={() => setLocation("/survey")}>
-        Retake Survey
-      </Button>
-    </CardContent>
-  </Card>
-</TabsContent>
-
-
-            {/* Products tab */}
-            <TabsContent value="products" className="space-y-4 pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {products.map((product) => (
-                  <div key={product.id} className="space-y-2">
-                    <ProductCardNoHeart {...product} image={product.imageUrl} />
-                    {product.matchReasons && product.matchReasons.length > 0 && (
-                      <div className="px-2 space-y-1">
-                        <p className="text-xs font-semibold text-primary">Why we recommend this:</p>
-                        <ul className="text-xs text-muted-foreground space-y-0.5">
-                          {product.matchReasons.map((reason, idx) => (
-                            <li key={idx}>• {reason}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </TabsContent>
-
-            {/* Liked products tab */}
-            <TabsContent value="liked" className="space-y-4 pt-6">
-              {likedProducts.length ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {likedProducts.map((p) => (
-                    <div key={p.id} className="space-y-2">
-                      <ProductCard {...p} image={p.imageUrl} />
+          {/* Main Layout */}
+          <div className="grid lg:grid-cols-[280px_1fr] gap-8">
+            {/* Sidebar Navigation */}
+            <aside className="space-y-2">
+              <Card className="p-2 sticky top-24 bg-white/80 backdrop-blur-sm border-primary/10">
+                <div className="p-4 mb-2 border-b border-border/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-chart-2 flex items-center justify-center text-white font-bold">
+                      <User className="h-5 w-5" />
                     </div>
-                  ))}
+                    <div className="overflow-hidden">
+                      <p className="font-semibold truncate">{user?.firstName} {user?.lastName}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <p className="text-muted-foreground">No liked products yet.</p>
-              )}
-            </TabsContent>
+                
+                <nav className="space-y-1 p-2">
+                  <NavItem 
+                    icon={<Package className="h-5 w-5" />}
+                    label="Your Box"
+                    value="box"
+                    active={activeTab === 'box'}
+                    onClick={setActiveTab}
+                  />
+                  <NavItem 
+                    icon={<History className="h-5 w-5" />}
+                    label="History"
+                    value="history"
+                    active={activeTab === 'history'}
+                    onClick={setActiveTab}
+                  />
+                  <NavItem 
+                    icon={<ClipboardList className="h-5 w-5" />}
+                    label="Survey Results"
+                    value="survey"
+                    active={activeTab === 'survey'}
+                    onClick={setActiveTab}
+                  />
+                  <NavItem 
+                    icon={<ShoppingBag className="h-5 w-5" />}
+                    label="Orders"
+                    value="orders"
+                    active={activeTab === 'orders'}
+                    onClick={setActiveTab}
+                  />
+                </nav>
+              </Card>
+            </aside>
 
-            {/* Orders tab */}
-            <TabsContent value="orders" className="space-y-4 pt-6">
-              {orders.length ? (
-                orders.map((o) => (
-                  <Card key={o.id}>
-                    <CardContent className="p-4 flex justify-between items-center">
-                      <div>
-                        <p className="font-semibold">Order #{o.id}</p>
-                        <p className="text-sm text-muted-foreground">{o.date}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold">{o.total}</p>
-                        <Badge>{o.status}</Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              ) : (
-                <p className="text-muted-foreground">No orders yet.</p>
-              )}
-            </TabsContent>
-          </Tabs>
+            {/* Content Area */}
+            <div className="min-h-[600px]">
+              {renderContent()}
+            </div>
+          </div>
         </div>
       </main>
+      
       <Footer />
     </div>
   );

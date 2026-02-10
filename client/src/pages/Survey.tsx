@@ -45,7 +45,13 @@ const getUserPath = (answers: Record<string, string | string[]>) => {
   return null;
 };
 
-// Base questions (shown to everyone after hormonal stage)
+// Helper to check if user should see the goals question
+const shouldShowGoals = (answers: Record<string, string | string[]>) => {
+  const stage = answers["hormonal-stage"] as string;
+  return ["no-change", "on-bc", "stopped-bc", "started-bc"].includes(stage);
+};
+
+// Base questions (shown to everyone)
 const baseQuestions: Question[] = [
   {
     id: "hormonal-stage",
@@ -65,6 +71,7 @@ const baseQuestions: Question[] = [
       { value: "switching", label: "Switching products" },
       { value: "organic", label: "Switch to fully organic products" },
     ],
+    conditional: (answers) => shouldShowGoals(answers),
   },
 ];
 
@@ -723,8 +730,15 @@ export default function Survey() {
   };
 
   const handlePrevious = () => {
-    setCurrentStep(currentStep - 1);
-    console.log(`Going back to question ${currentStep}`);
+    // If going back from the second question to the first, clear all answers
+    if (currentStep === 1) {
+      setAnswers({});
+      setCurrentStep(0);
+      console.log("Going back to first question - cleared all answers");
+    } else {
+      setCurrentStep(currentStep - 1);
+      console.log(`Going back to question ${currentStep}`);
+    }
   };
 
   const canProceed = () => {
