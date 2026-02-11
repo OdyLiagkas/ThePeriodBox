@@ -525,7 +525,7 @@ const perimenopausalQuestions: Question[] = [
   },
   {
     id: "internal-products",
-    question: "How do you feel about internal products right now?",
+    question: "How do you feel about intravaginal products (tampons, cups etc.) right now?",
     type: "single",
     options: [
       { value: "prefer", label: "I prefer them" },
