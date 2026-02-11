@@ -116,7 +116,7 @@ export function Footer() {
 
         <div className="mt-8 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            © 2026 PeriodBox. All rights reserved.
+            © 2026 The Period Box Inc. All rights reserved.
           </p>
           <div className="flex gap-4 text-sm text-muted-foreground">
             <span className="px-3 py-1 bg-accent/20 text-accent-foreground rounded-full font-medium">Women-owned</span>

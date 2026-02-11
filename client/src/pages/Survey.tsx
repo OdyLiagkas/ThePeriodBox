@@ -241,7 +241,7 @@ const menstruatingQuestions: Question[] = [
 const pregnantQuestions: Question[] = [
   {
     id: "trimester",
-    question: "I'm currently in my ______ trimester:",
+    question: "Which trimester are you currently in?",
     type: "single",
     options: [
       { value: "1st", label: "1st" },

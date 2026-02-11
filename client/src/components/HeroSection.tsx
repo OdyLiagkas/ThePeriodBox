@@ -37,7 +37,7 @@ export function HeroSection() {
               </Link>
               <Link href="/about" data-testid="link-hero-products">
                 <Button size="lg" variant="outline" className="text-base font-semibold">
-                  About ThePeriodBox
+                  About The Perio dBox
                 </Button>
               </Link>
             </div>
