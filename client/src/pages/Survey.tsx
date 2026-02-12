@@ -799,7 +799,7 @@ const handleOtherTextChange = (text: string) => {
   setOtherText(text);
   const values = Array.isArray(value) ? (value as string[]).filter(v => !v.startsWith("other:")) : [];
   if (text.trim()) {
-    // Store the raw text as-is, just wrap it with "other:" prefix
+    // Store the raw text exactly as typed with "other:" prefix
     onChange([...values, `other:${text}`]);
   } else {
     onChange(values);
@@ -914,7 +914,7 @@ const handleOtherTextChange = (text: string) => {
             {allowOther && isOtherSelected && (
               <div className="mt-4 p-4 rounded-lg border-2 border-primary/20 bg-primary/5">
                 <Label htmlFor={`${id}-other`} className="text-sm font-medium mb-2 block">
-                  Please specify (separate multiple brands with commas):
+                  Please specify:
                 </Label>
                 <Input
                   id={`${id}-other`}
@@ -977,67 +977,67 @@ export default function Survey() {
     }
   }, [answers]);
 
-  const submitSurvey = useMutation({
-    mutationFn: async (surveyData: { answers: Record<string, string | string[]> }) => {
-      if (!isAuthenticated || !user?.googleId) {
-        throw new Error("You must be logged in to submit a survey.");
-      }
+const submitSurvey = useMutation({
+  mutationFn: async (surveyData: { answers: Record<string, string | string[]> }) => {
+    if (!isAuthenticated || !user?.googleId) {
+      throw new Error("You must be logged in to submit a survey.");
+    }
 
-      // Process answers before submitting - handle "other" values and optional text
-      const processedAnswers: Record<string, string | string[]> = {};
+    // Process answers before submitting - handle "other" values and optional text
+    const processedAnswers: Record<string, string | string[]> = {};
+    
+    for (const [key, val] of Object.entries(surveyData.answers)) {
+      const question = visibleQuestions.find(q => q.id === key);
       
-      for (const [key, val] of Object.entries(surveyData.answers)) {
-        const question = visibleQuestions.find(q => q.id === key);
-        
-        if (question?.type === "text" && question?.optional && (!val || (typeof val === "string" && val.trim() === ""))) {
-          processedAnswers[key] = "NONE";
-        } else if (question?.type === "select-multiple" && question?.allowOther && Array.isArray(val)) {
-          // Process other values - split the "other:brand1, brand2" into separate entries
-          const processed: string[] = [];
-          val.forEach(v => {
-            if (v.startsWith("other:")) {
-              const otherValues = v.replace("other:", "").split(",").map(s => s.trim()).filter(s => s);
-              processed.push("other", ...otherValues);
-            } else {
-              processed.push(v);
-            }
-          });
-          processedAnswers[key] = processed;
-        } else {
-          processedAnswers[key] = val;
-        }
+      if (question?.type === "text" && question?.optional && (!val || (typeof val === "string" && val.trim() === ""))) {
+        processedAnswers[key] = "NONE";
+      } else if ((question?.type === "select-multiple" || question?.type === "multiple") && question?.allowOther && Array.isArray(val)) {
+        // Keep other values as-is, just remove the "other:" prefix but keep the full text
+        const processed: string[] = [];
+        val.forEach(v => {
+          if (typeof v === "string" && v.startsWith("other:")) {
+            // Just remove the prefix, keep the entire text as one entry
+            processed.push(v.replace("other:", ""));
+          } else {
+            processed.push(v);
+          }
+        });
+        processedAnswers[key] = processed;
+      } else {
+        processedAnswers[key] = val;
       }
+    }
 
-      const res = await fetch("/api/survey-responses", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ answers: processedAnswers }),
-      });
+    const res = await fetch("/api/survey-responses", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ answers: processedAnswers }),
+    });
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ message: res.statusText }));
-        throw new Error(errorData.message || "Failed to submit survey");
-      }
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ message: res.statusText }));
+      throw new Error(errorData.message || "Failed to submit survey");
+    }
 
-      return res.json();
-    },
+    return res.json();
+  },
 
-    onSuccess: (data) => {
-      console.log("Survey submitted successfully:", data);
-      setIsComplete(true);
-    },
+  onSuccess: (data) => {
+    console.log("Survey submitted successfully:", data);
+    setIsComplete(true);
+  },
 
-    onError: (error: any) => {
-      toast({
-        title: "Error submitting survey",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+  onError: (error: any) => {
+    toast({
+      title: "Error submitting survey",
+      description: error.message,
+      variant: "destructive",
+    });
+  },
+});
 
   const currentQuestion = visibleQuestions[currentStep];
   const isLastQuestion = currentStep === visibleQuestions.length - 1;
