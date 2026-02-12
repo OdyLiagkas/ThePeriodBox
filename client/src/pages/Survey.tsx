@@ -795,17 +795,16 @@ function SurveyQuestionComponent({
     }
   }, [value, type, allowOther]);
 
-  const handleOtherTextChange = (text: string) => {
-    setOtherText(text);
-    const values = Array.isArray(value) ? (value as string[]).filter(v => !v.startsWith("other:")) : [];
-    if (text.trim()) {
-      // Split by comma and clean up spaces
-      const cleanedText = text.split(",").map(s => s.trim()).filter(s => s).join(", ");
-      onChange([...values, `other:${cleanedText}`]);
-    } else {
-      onChange(values);
-    }
-  };
+const handleOtherTextChange = (text: string) => {
+  setOtherText(text);
+  const values = Array.isArray(value) ? (value as string[]).filter(v => !v.startsWith("other:")) : [];
+  if (text.trim()) {
+    // Store the raw text as-is, just wrap it with "other:" prefix
+    onChange([...values, `other:${text}`]);
+  } else {
+    onChange(values);
+  }
+};
 
   const renderQuestion = () => {
     switch (type) {
@@ -827,11 +826,11 @@ function SurveyQuestionComponent({
               value={(value as string) || ""}
               onChange={(e) => onChange(e.target.value)}
             />
-            {optional && (
+{/*            {optional && (
               <p className="text-xs text-muted-foreground">
                 This question is optional. Leave blank if you prefer.
               </p>
-            )}
+            )} */}
           </div>
         );
 
