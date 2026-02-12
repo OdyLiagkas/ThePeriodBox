@@ -6,10 +6,12 @@ import { SurveyQuestion } from "@/components/SurveyQuestion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocation } from "wouter";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, GripVertical } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface Question {
   id: string;
@@ -19,6 +21,9 @@ interface Question {
   options?: { value: string; label: string }[];
   maxSelections?: number;
   conditional?: (answers: Record<string, string | string[]>) => boolean;
+  allowOther?: boolean;
+  otherPlaceholder?: string;
+  optional?: boolean;
 }
 
 // Hormonal stage options
@@ -159,8 +164,10 @@ const menstruatingQuestions: Question[] = [
   {
     id: "current-brand",
     question: "Which brand(s) are you currently using?",
-    description: "Select all that apply.",
+    description: "Select all that apply. If selecting 'Other', please specify brands separated by commas.",
     type: "select-multiple",
+    allowOther: true,
+    otherPlaceholder: "Enter other brands (separate by commas)...",
     options: [
       { value: "always", label: "Always" },
       { value: "august", label: "August" },
@@ -224,7 +231,7 @@ const menstruatingQuestions: Question[] = [
   {
     id: "most-important",
     question: "What's most important to you when trying a new product?",
-    description: "Rank from highest to lowest importance.",
+    description: "Drag items to rank from highest to lowest importance (top = most important).",
     type: "ranking",
     options: [
       { value: "comfort", label: "Comfort" },
@@ -298,7 +305,7 @@ const pregnantQuestions: Question[] = [
   {
     id: "most-important-pregnant",
     question: "What's most important to you when trying a new product?",
-    description: "Rank from highest to lowest importance.",
+    description: "Drag items to rank from highest to lowest importance (top = most important).",
     type: "ranking",
     options: [
       { value: "comfort", label: "Comfort" },
@@ -311,8 +318,9 @@ const pregnantQuestions: Question[] = [
   },
   {
     id: "additional-notes-pregnant",
-    question: "Is there anything else you want us to know about your body or comfort right now?",
+    question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
     type: "text",
+    optional: true,
   },
 ];
 
@@ -422,7 +430,7 @@ const postpartumQuestions: Question[] = [
   {
     id: "most-important-postpartum",
     question: "What's most important to you when trying a new product?",
-    description: "Rank from highest to lowest importance.",
+    description: "Drag items to rank from highest to lowest importance (top = most important).",
     type: "ranking",
     options: [
       { value: "comfort", label: "Comfort" },
@@ -435,8 +443,9 @@ const postpartumQuestions: Question[] = [
   },
   {
     id: "additional-notes-postpartum",
-    question: "Is there anything else you want us to know about your body or comfort right now?",
+    question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
     type: "text",
+    optional: true,
   },
 ];
 
@@ -548,8 +557,9 @@ const perimenopausalQuestions: Question[] = [
   },
   {
     id: "additional-notes-peri",
-    question: "Is there anything else you want us to know about your body or comfort right now?",
+    question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
     type: "text",
+    optional: true,
   },
 ];
 
@@ -611,8 +621,9 @@ const menopausalQuestions: Question[] = [
   },
   {
     id: "additional-notes-meno",
-    question: "Is there anything else you want us to know about your body or comfort right now?",
+    question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
     type: "text",
+    optional: true,
   },
 ];
 
@@ -643,6 +654,300 @@ const getAllQuestions = (): Question[] => {
   ];
 };
 
+// Drag and Drop Ranking Component
+interface DragDropRankingProps {
+  options: { value: string; label: string }[];
+  value: string[];
+  onChange: (value: string[]) => void;
+}
+
+function DragDropRanking({ options, value, onChange }: DragDropRankingProps) {
+  const [items, setItems] = useState<{ value: string; label: string }[]>([]);
+  const [draggingItem, setDraggingItem] = useState<string | null>(null);
+  const [dragOverItem, setDragOverItem] = useState<string | null>(null);
+
+  // Initialize items from value or options
+  useEffect(() => {
+    if (value && value.length > 0) {
+      const orderedItems = value
+        .map(v => options.find(o => o.value === v))
+        .filter((o): o is { value: string; label: string } => o !== undefined);
+      // Add any missing options
+      const missingOptions = options.filter(o => !value.includes(o.value));
+      setItems([...orderedItems, ...missingOptions]);
+    } else {
+      setItems([...options]);
+    }
+  }, [options, value]);
+
+  const handleDragStart = (e: React.DragEvent, itemValue: string) => {
+    setDraggingItem(itemValue);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", itemValue);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingItem(null);
+    setDragOverItem(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, overItemValue: string) => {
+    e.preventDefault();
+    if (draggingItem && draggingItem !== overItemValue) {
+      setDragOverItem(overItemValue);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, targetValue: string) => {
+    e.preventDefault();
+    if (!draggingItem || draggingItem === targetValue) return;
+
+    const newItems = [...items];
+    const dragIndex = newItems.findIndex(i => i.value === draggingItem);
+    const dropIndex = newItems.findIndex(i => i.value === targetValue);
+
+    if (dragIndex !== -1 && dropIndex !== -1) {
+      const [removed] = newItems.splice(dragIndex, 1);
+      newItems.splice(dropIndex, 0, removed);
+      setItems(newItems);
+      onChange(newItems.map(i => i.value));
+    }
+
+    setDraggingItem(null);
+    setDragOverItem(null);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOverItem(null);
+  };
+
+  return (
+    <div className="space-y-2">
+      {items.map((item, index) => (
+        <div
+          key={item.value}
+          draggable
+          onDragStart={(e) => handleDragStart(e, item.value)}
+          onDragEnd={handleDragEnd}
+          onDragOver={(e) => handleDragOver(e, item.value)}
+          onDrop={(e) => handleDrop(e, item.value)}
+          onDragLeave={handleDragLeave}
+          className={`
+            flex items-center gap-3 p-3 rounded-lg border-2 cursor-move transition-all
+            ${draggingItem === item.value 
+              ? "opacity-50 border-primary bg-primary/5" 
+              : "border-border bg-card hover:border-primary/50"
+            }
+            ${dragOverItem === item.value && draggingItem !== item.value
+              ? "border-primary bg-primary/10 scale-[1.02]"
+              : ""
+            }
+          `}
+        >
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
+            {index + 1}
+          </div>
+          <GripVertical className="w-5 h-5 text-muted-foreground" />
+          <span className="flex-1 font-medium">{item.label}</span>
+        </div>
+      ))}
+      <p className="text-sm text-muted-foreground mt-2">
+        Drag items to reorder. Top = highest priority.
+      </p>
+    </div>
+  );
+}
+
+// Updated SurveyQuestionComponent - replace the entire component
+interface SurveyQuestionProps extends Question {
+  value: string | string[] | undefined;
+  onChange: (value: string | string[]) => void;
+}
+
+function SurveyQuestionComponent({
+  id,
+  question,
+  description,
+  type,
+  options,
+  maxSelections,
+  value,
+  onChange,
+  allowOther,
+  otherPlaceholder,
+  optional,
+}: SurveyQuestionProps) {
+  const [otherText, setOtherText] = useState("");
+  const [isOtherSelected, setIsOtherSelected] = useState(false);
+
+  // Check if "other" is selected when value changes
+  useEffect(() => {
+    if ((type === "select-multiple" || type === "multiple") && allowOther) {
+      const values = Array.isArray(value) ? value : [];
+      setIsOtherSelected(values.includes("other"));
+      
+      // Parse existing other values from the combined string if present
+      const otherValue = values.find(v => typeof v === "string" && v.startsWith("other:"));
+      if (otherValue) {
+        setOtherText((otherValue as string).replace("other:", ""));
+      }
+    }
+  }, [value, type, allowOther]);
+
+  const handleOtherTextChange = (text: string) => {
+    setOtherText(text);
+    const values = Array.isArray(value) ? (value as string[]).filter(v => !v.startsWith("other:")) : [];
+    if (text.trim()) {
+      // Split by comma and clean up spaces
+      const cleanedText = text.split(",").map(s => s.trim()).filter(s => s).join(", ");
+      onChange([...values, `other:${cleanedText}`]);
+    } else {
+      onChange(values);
+    }
+  };
+
+  const renderQuestion = () => {
+    switch (type) {
+      case "ranking":
+        return (
+          <DragDropRanking
+            options={options || []}
+            value={Array.isArray(value) ? value : []}
+            onChange={onChange}
+          />
+        );
+
+      case "text":
+        return (
+          <div className="space-y-2">
+            <textarea
+              className="w-full min-h-[100px] p-3 rounded-md border border-input bg-background text-sm"
+              placeholder={optional ? "Optional - tell us more (or leave blank)" : "Type your answer here..."}
+              value={(value as string) || ""}
+              onChange={(e) => onChange(e.target.value)}
+            />
+            {optional && (
+              <p className="text-xs text-muted-foreground">
+                This question is optional. Leave blank if you prefer.
+              </p>
+            )}
+          </div>
+        );
+
+      case "single":
+        return (
+          <div className="grid gap-2">
+            {options?.map((option) => {
+              const isSelected = value === option.value;
+              return (
+                <button
+                  key={option.value}
+                  onClick={() => onChange(option.value)}
+                  className={`
+                    flex items-center justify-between p-3 rounded-lg border-2 transition-all text-left
+                    ${isSelected 
+                      ? "border-primary bg-primary/5" 
+                      : "border-border hover:border-primary/50"
+                    }
+                  `}
+                >
+                  <span className="font-medium">{option.label}</span>
+                  {isSelected && <CheckCircle2 className="w-5 h-5 text-primary" />}
+                </button>
+              );
+            })}
+          </div>
+        );
+
+      case "dropdown":
+        return (
+          <select
+            className="w-full p-3 rounded-md border border-input bg-background text-sm"
+            value={(value as string) || ""}
+            onChange={(e) => onChange(e.target.value)}
+          >
+            <option value="" disabled>Select an option...</option>
+            {options?.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        );
+
+      case "multiple":
+      case "select-multiple":
+        return (
+          <div className="space-y-3">
+            <div className="grid gap-2">
+              {options?.map((option) => {
+                const values = Array.isArray(value) ? value : [];
+                const isSelected = values.includes(option.value);
+                return (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      const current = Array.isArray(value) ? value : [];
+                      if (isSelected) {
+                        onChange(current.filter((v) => v !== option.value));
+                      } else {
+                        if (!maxSelections || current.length < maxSelections) {
+                          onChange([...current, option.value]);
+                        }
+                      }
+                    }}
+                    className={`
+                      flex items-center justify-between p-3 rounded-lg border-2 transition-all text-left
+                      ${isSelected 
+                        ? "border-primary bg-primary/5" 
+                        : "border-border hover:border-primary/50"
+                      }
+                    `}
+                  >
+                    <span className="font-medium">{option.label}</span>
+                    {isSelected && <CheckCircle2 className="w-5 h-5 text-primary" />}
+                  </button>
+                );
+              })}
+            </div>
+            
+            {allowOther && isOtherSelected && (
+              <div className="mt-4 p-4 rounded-lg border-2 border-primary/20 bg-primary/5">
+                <Label htmlFor={`${id}-other`} className="text-sm font-medium mb-2 block">
+                  Please specify (separate multiple brands with commas):
+                </Label>
+                <Input
+                  id={`${id}-other`}
+                  placeholder={otherPlaceholder || "Enter other brands..."}
+                  value={otherText}
+                  onChange={(e) => handleOtherTextChange(e.target.value)}
+                  className="bg-background"
+                />
+              </div>
+            )}
+          </div>
+        );
+
+      default:
+        return (
+          <div className="p-4 text-red-500">
+            Unknown question type: {type}
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <h3 className="text-lg font-semibold">{question}</h3>
+        {description && <p className="text-sm text-muted-foreground">{description}</p>}
+      </div>
+      {renderQuestion()}
+    </div>
+  );
+}
 export default function Survey() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -679,13 +984,38 @@ export default function Survey() {
         throw new Error("You must be logged in to submit a survey.");
       }
 
+      // Process answers before submitting - handle "other" values and optional text
+      const processedAnswers: Record<string, string | string[]> = {};
+      
+      for (const [key, val] of Object.entries(surveyData.answers)) {
+        const question = visibleQuestions.find(q => q.id === key);
+        
+        if (question?.type === "text" && question?.optional && (!val || (typeof val === "string" && val.trim() === ""))) {
+          processedAnswers[key] = "NONE";
+        } else if (question?.type === "select-multiple" && question?.allowOther && Array.isArray(val)) {
+          // Process other values - split the "other:brand1, brand2" into separate entries
+          const processed: string[] = [];
+          val.forEach(v => {
+            if (v.startsWith("other:")) {
+              const otherValues = v.replace("other:", "").split(",").map(s => s.trim()).filter(s => s);
+              processed.push("other", ...otherValues);
+            } else {
+              processed.push(v);
+            }
+          });
+          processedAnswers[key] = processed;
+        } else {
+          processedAnswers[key] = val;
+        }
+      }
+
       const res = await fetch("/api/survey-responses", {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(surveyData),
+        body: JSON.stringify({ answers: processedAnswers }),
       });
 
       if (!res.ok) {
@@ -743,6 +1073,10 @@ export default function Survey() {
 
   const canProceed = () => {
     const answer = answers[currentQuestion.id];
+    
+    // If question is optional, always allow proceed
+    if (currentQuestion.optional) return true;
+    
     if (!answer) return false;
     
     if (currentQuestion.type === "multiple" || currentQuestion.type === "select-multiple") {
@@ -881,7 +1215,7 @@ export default function Survey() {
               totalSteps={totalSteps} 
             />
 
-            <SurveyQuestion
+            <SurveyQuestionComponent
               {...currentQuestion}
               value={answers[currentQuestion.id]}
               onChange={handleAnswer}

@@ -30,14 +30,14 @@ export function HeroSection() {
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/survey" data-testid="link-hero-survey">
                 <Button size="lg" className="text-base font-semibold group">
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  {/*<ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />  */}
                   Start Your Journey
                   
                 </Button>
               </Link>
               <Link href="/about" data-testid="link-hero-products">
                 <Button size="lg" variant="outline" className="text-base font-semibold">
-                  About The Perio dBox
+                  About The Period Box
                 </Button>
               </Link>
             </div>
