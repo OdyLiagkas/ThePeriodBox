@@ -142,7 +142,7 @@ const menstruatingQuestions: Question[] = [
   {
     id: "sensitivities",
     question: "Do you have any sensitivities?",
-    description: "We'll filter out products that may not work for you.",
+    description: "Select all that apply. We'll filter out products that may not work for you.",
     type: "multiple",
     options: [
       { value: "fragrance", label: "Fragrance sensitivity" },
@@ -294,6 +294,7 @@ const pregnantQuestions: Question[] = [
   {
     id: "sensitivities-pregnant",
     question: "Do you have any sensitivities?",
+    description: "Select all that apply. We'll filter out products that may not work for you.",
     type: "multiple",
     options: [
       { value: "fragrance", label: "Fragrance sensitivity" },
@@ -408,6 +409,7 @@ const postpartumQuestions: Question[] = [
   {
     id: "sensitivities-postpartum",
     question: "Do you have any sensitivities?",
+    description: "Select all that apply. We'll filter out products that may not work for you.",
     type: "multiple",
     options: [
       { value: "fragrance", label: "Fragrance sensitivity" },
@@ -785,26 +787,38 @@ function SurveyQuestionComponent({
   useEffect(() => {
     if ((type === "select-multiple" || type === "multiple") && allowOther) {
       const values = Array.isArray(value) ? value : [];
-      setIsOtherSelected(values.includes("other"));
+      const hasOther = values.some(v => v === "other" || (typeof v === "string" && v.startsWith("other:")));
+      setIsOtherSelected(hasOther);
       
       // Parse existing other values from the combined string if present
       const otherValue = values.find(v => typeof v === "string" && v.startsWith("other:"));
       if (otherValue) {
         setOtherText((otherValue as string).replace("other:", ""));
+      } else {
+        setOtherText("");
       }
     }
   }, [value, type, allowOther]);
 
-const handleOtherTextChange = (text: string) => {
-  setOtherText(text);
-  const values = Array.isArray(value) ? (value as string[]).filter(v => !v.startsWith("other:")) : [];
-  if (text.trim()) {
-    // Store the raw text exactly as typed with "other:" prefix
-    onChange([...values, `other:${text}`]);
-  } else {
-    onChange(values);
-  }
-};
+  // Only update parent when user leaves the field or after a delay
+  const handleOtherTextBlur = () => {
+    const values = Array.isArray(value) ? (value as string[]).filter(v => !v.startsWith("other:")) : [];
+    
+    // Remove standalone "other" if it exists (we'll replace it with "other:text")
+    const cleanValues = values.filter(v => v !== "other");
+    
+    if (otherText.trim()) {
+      // Store as single string with prefix
+      onChange([...cleanValues, `other:${otherText}`]);
+    } else {
+      onChange(cleanValues);
+    }
+  };
+
+  const handleOtherTextChange = (text: string) => {
+    setOtherText(text);
+    // Don't update parent on every keystroke - wait for blur
+  };
 
   const renderQuestion = () => {
     switch (type) {
@@ -826,11 +840,6 @@ const handleOtherTextChange = (text: string) => {
               value={(value as string) || ""}
               onChange={(e) => onChange(e.target.value)}
             />
-{/*            {optional && (
-              <p className="text-xs text-muted-foreground">
-                This question is optional. Leave blank if you prefer.
-              </p>
-            )} */}
           </div>
         );
 
@@ -882,14 +891,19 @@ const handleOtherTextChange = (text: string) => {
             <div className="grid gap-2">
               {options?.map((option) => {
                 const values = Array.isArray(value) ? value : [];
-                const isSelected = values.includes(option.value);
+                // Check if this option is selected (handle both regular values and "other")
+                const isSelected = values.includes(option.value) || 
+                  (option.value === "other" && values.some(v => typeof v === "string" && v.startsWith("other:")));
+                
                 return (
                   <button
                     key={option.value}
                     onClick={() => {
                       const current = Array.isArray(value) ? value : [];
                       if (isSelected) {
-                        onChange(current.filter((v) => v !== option.value));
+                        // Remove this option
+                        const filtered = current.filter((v) => v !== option.value && !(typeof v === "string" && v.startsWith("other:")));
+                        onChange(filtered);
                       } else {
                         if (!maxSelections || current.length < maxSelections) {
                           onChange([...current, option.value]);
@@ -921,6 +935,7 @@ const handleOtherTextChange = (text: string) => {
                   placeholder={otherPlaceholder || "Enter other brands..."}
                   value={otherText}
                   onChange={(e) => handleOtherTextChange(e.target.value)}
+                  onBlur={handleOtherTextBlur}
                   className="bg-background"
                 />
               </div>
