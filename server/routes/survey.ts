@@ -45,6 +45,32 @@ const result = await client.query(
   }
 });
 
+router.get("/notify-when-ready/status", async (req, res) => {
+  const user = req.user as any | undefined;
+  
+  if (!user?.id) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    const result = await client.query(
+      `SELECT id FROM people_to_notify 
+       WHERE user_id = $1 AND notified = FALSE
+       LIMIT 1`,
+      [user.id]
+    );
+
+    res.json({ subscribed: result.rows.length > 0 });
+  } catch (err: any) {
+    console.error("Status check error:", err);
+    res.status(500).json({ message: "Failed to check status" });
+  } finally {
+    client.release();
+  }
+});
+
 
 router.get("/survey-responses", async (req, res) => {
   const user = req.user as any | undefined;

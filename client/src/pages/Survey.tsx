@@ -1184,7 +1184,7 @@ const saveNotificationPreference = useMutation({
               
               <div className="space-y-3">
                 <h1 className="text-3xl md:text-4xl font-bold font-heading">
-                  1. Thank you for taking the survey!
+                  Thank you for taking the survey!
                 </h1>
                 <p className="text-lg text-muted-foreground">
                   <span className="font-semibold text-foreground">
@@ -1192,7 +1192,7 @@ const saveNotificationPreference = useMutation({
                   </span>
                 </p>
                 <p className="text-muted-foreground">
-                  Click this box to be notified when it's ready.
+                  Click the box below to be notified when it's ready.
                 </p>
               </div>
 

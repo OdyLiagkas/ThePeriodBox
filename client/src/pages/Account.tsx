@@ -18,8 +18,12 @@ import {
   ThumbsDown,
   Sparkles,
   LogOut,
-  User
+  User,
+  CheckCircle2,
+  Bell
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 /* ----------  TYPES  ---------- */
 interface PortalProduct {
@@ -228,6 +232,141 @@ function ProductFeedbackCard({ product, onFeedback }: ProductFeedbackCardProps) 
   );
 }
 
+/* ----------  NOTIFICATION PREFERENCE COMPONENT  ---------- */
+function NotificationPreference() {
+  const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth();
+
+  // Check server if user already opted in
+  const { data: isSubscribed, isLoading: checkingStatus } = useQuery({
+    queryKey: ['notification-status'],
+    queryFn: async () => {
+      const res = await fetch("/api/notify-when-ready/status", {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to check status");
+      const data = await res.json();
+      return data.subscribed; // boolean from server
+    },
+    enabled: isAuthenticated,
+  });
+
+  // Mutation to save preference
+  const saveNotification = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/notify-when-ready", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user?.id || user?.googleId,
+          email: user?.email,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Preference saved",
+        description: "We'll notify you when your sample box is ready!",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const isSaved = isSubscribed || saveNotification.isSuccess;
+  const isPending = checkingStatus || saveNotification.isPending;
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center space-y-4 max-w-2xl mx-auto">
+        <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-chart-2/20 flex items-center justify-center">
+          <Package className="h-10 w-10 text-primary" />
+        </div>
+        
+        <div className="space-y-2">
+          <h2 className="text-2xl md:text-3xl font-bold font-heading">
+            We are currently working on curating your perfect sample box
+          </h2>
+          <p className="text-muted-foreground text-lg">
+            Click below to be notified when it's ready
+          </p>
+        </div>
+      </div>
+
+      <div className="max-w-md mx-auto">
+        <div
+          onClick={() => {
+            if (!isSaved && !isPending) {
+              saveNotification.mutate();
+            }
+          }}
+          className={`
+            relative flex items-center justify-center gap-3 p-6 rounded-xl border-2 cursor-pointer transition-all duration-300
+            ${isSaved
+              ? "border-green-500 bg-green-50/50 cursor-default"
+              : "border-primary/20 bg-gradient-to-r from-primary/5 to-chart-2/5 hover:border-primary/50 hover:shadow-md"
+            }
+            ${isPending ? "opacity-70 cursor-wait" : ""}
+          `}
+        >
+          {isSaved ? (
+            <>
+              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle2 className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="text-left">
+                <p className="font-bold text-green-700 text-lg">Preference saved</p>
+                <p className="text-green-600 text-sm">We'll email you when your box is ready!</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Bell className="w-6 h-6 text-primary" />
+              </div>
+              <div className="text-left">
+                <p className="font-bold text-foreground text-lg">
+                  {isPending ? "Checking..." : "Notify me when ready"}
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  Get an email as soon as your curated box is available
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="text-center">
+        <p className="text-sm text-muted-foreground">
+          In the meantime, you can review your{" "}
+          <button 
+            onClick={() => {}} // You'd need to pass setActiveTab here or use context
+            className="text-primary hover:underline font-medium"
+          >
+            survey results
+          </button>
+          {" "}or{" "}
+          <button 
+            onClick={() => {}} // Same here
+            className="text-primary hover:underline font-medium"
+          >
+            update your preferences
+          </button>
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /* ----------  PAGE  ---------- */
 export default function Account() {
   const { user, isLoading, isAuthenticated, logout } = useAuth();
@@ -282,7 +421,6 @@ export default function Account() {
     setBoxProducts(prev => prev.map(p => 
       p.id === productId ? { ...p, feedback: type } : p
     ));
-    // Here you would typically send to API: fetch('/api/feedback', { method: 'POST', body: JSON.stringify({ productId, type }) })
   };
 
   if (isLoading) return (
@@ -294,13 +432,18 @@ export default function Account() {
     </div>
   );
   
-  if (!isAuthenticated) return null; // redirect in progress
+  if (!isAuthenticated) return null;
 
   const renderContent = () => {
     switch (activeTab) {
       case 'box':
         return (
-          <div className="space-y-6">
+          <div className="space-y-8 py-8">
+            {/* NEW: Notification Preference Section */}
+            <NotificationPreference />
+
+            {/* COMMENTED OUT: Original Your Box Section 
+            
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold font-heading">Your Box</h2>
@@ -334,6 +477,8 @@ export default function Account() {
                 </Button>
               </CardContent>
             </Card>
+            
+            */}
           </div>
         );
 
