@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Question {
   id: string;
@@ -1127,74 +1128,163 @@ const submitSurvey = useMutation({
     setLocation("/account");
   };
 
+const saveNotificationPreference = useMutation({
+  mutationFn: async () => {
+    if (!isAuthenticated || !user?.googleId) {
+      throw new Error("You must be logged in.");
+    }
+
+    const res = await fetch("/api/notify-when-ready", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId: user.googleId,
+        email: user.email,
+      }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ message: res.statusText }));
+      throw new Error(errorData.message || "Failed to save preference");
+    }
+
+    return res.json();
+  },
+  onSuccess: () => {
+    toast({
+      title: "Preference saved",
+      description: "We'll notify you when your sample box is ready!",
+    });
+  },
+  onError: (error: any) => {
+    toast({
+      title: "Error",
+      description: error.message,
+      variant: "destructive",
+    });
+  },
+});
+
   if (isComplete) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 py-16 md:py-24">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-3xl space-y-8">
-            <Card className="border-2">
-              <CardContent className="p-12 text-center space-y-6">
-                <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-primary to-chart-2 flex items-center justify-center">
-                  <CheckCircle2 className="h-10 w-10 text-white" />
-                </div>
-                
-                <div className="space-y-3">
-                  <h1 className="text-3xl md:text-4xl font-bold font-heading">
-                    Perfect! We Found Your Match
-                  </h1>
-                  <p className="text-lg text-muted-foreground">
-                    Based on your answers, we've curated the ideal sample kit just for you.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+  const isPreferenceSaved = saveNotificationPreference.isSuccess;
 
-            <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-chart-2/5">
-              <CardContent className="p-8 space-y-4">
-                <div className="text-center space-y-3">
-                  <h2 className="text-2xl md:text-3xl font-bold font-heading bg-gradient-to-r from-primary to-chart-2 bg-clip-text text-transparent">
-                    Try the PeriodBox Sample Kit
-                  </h2>
-                  <p className="text-muted-foreground">
-                    Get a curated selection of the brands that fit you best. Try before you commit to full-size products!
-                  </p>
-                </div>
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1 py-16 md:py-24">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-3xl space-y-8">
+          <Card className="border-2">
+            <CardContent className="p-12 text-center space-y-6">
+              <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-primary to-chart-2 flex items-center justify-center">
+                <CheckCircle2 className="h-10 w-10 text-white" />
+              </div>
+              
+              <div className="space-y-3">
+                <h1 className="text-3xl md:text-4xl font-bold font-heading">
+                  1. Thank you for taking the survey!
+                </h1>
+                <p className="text-lg text-muted-foreground">
+                  <span className="font-semibold text-foreground">
+                    We are currently working on curating your perfect sample box.
+                  </span>
+                </p>
+                <p className="text-muted-foreground">
+                  Click this box to be notified when it's ready.
+                </p>
+              </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
-                    <p className="text-sm">Personalized samples based on your survey results</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
-                    <p className="text-sm">Try multiple products to find your perfect match</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
-                    <p className="text-sm">Risk-free way to discover new brands</p>
-                  </div>
+              {/* Notification Preference Checkbox */}
+              <div className="pt-4">
+                <div 
+                  className={`
+                    flex items-center justify-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all
+                    ${isPreferenceSaved 
+                      ? "border-green-500 bg-green-50" 
+                      : "border-primary/20 bg-primary/5 hover:border-primary/50"
+                    }
+                    ${saveNotificationPreference.isPending ? "opacity-70" : ""}
+                  `}
+                  onClick={() => {
+                    if (!isPreferenceSaved && !saveNotificationPreference.isPending) {
+                      saveNotificationPreference.mutate();
+                    }
+                  }}
+                >
+                  {isPreferenceSaved ? (
+                    <>
+                      <CheckCircle2 className="w-6 h-6 text-green-600" />
+                      <span className="text-green-700 font-semibold text-lg">
+                        Preference saved
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Checkbox 
+                        checked={false}
+                        className="w-6 h-6 border-2"
+                      />
+                      <span className="font-medium text-lg">
+                        {saveNotificationPreference.isPending 
+                          ? "Saving..." 
+                          : "Notify me when my box is ready"
+                        }
+                      </span>
+                    </>
+                  )}
                 </div>
+              </div>
+            </CardContent>
+          </Card>
 
-                <div className="pt-4">
-                  <Button 
-                    size="lg" 
-                    variant="default"
-                    className="w-full text-base font-semibold"
-                    data-testid="button-purchase-kit"
-                    onClick={handleGetSampleKit}
-                  >
-                    Get Your Sample Kit
-                  </Button>
+          {/* Rest of the card remains the same */}
+          <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-chart-2/5">
+            <CardContent className="p-8 space-y-4">
+              <div className="text-center space-y-3">
+                <h2 className="text-2xl md:text-3xl font-bold font-heading bg-gradient-to-r from-primary to-chart-2 bg-clip-text text-transparent">
+                  Try The Period Box Sample Kit
+                </h2>
+                <p className="text-muted-foreground">
+                  Get a curated selection of the brands that fit you best. Try before you commit to full-size products!
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
+                  <p className="text-sm">Personalized samples based on your survey results</p>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
+                  <p className="text-sm">Try multiple products to find your perfect match</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
+                  <p className="text-sm">Risk-free way to discover new brands</p>
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <Button 
+                  size="lg" 
+                  variant="default"
+                  className="w-full text-base font-semibold"
+                  data-testid="button-purchase-kit"
+                  onClick={handleGetSampleKit}
+                >
+                  Get Your Sample Kit
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}
 
   // Don't render until we have a current question
   if (!currentQuestion) {

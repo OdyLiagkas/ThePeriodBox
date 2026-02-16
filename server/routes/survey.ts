@@ -69,4 +69,70 @@ router.get("/survey-responses", async (req, res) => {
   }
 });
 
+router.post("/notify-when-ready", async (req, res) => {
+  console.log("=== NOTIFY DEBUG ===");
+  console.log("req.user:", req.user);
+  console.log("req.isAuthenticated():", req.isAuthenticated());
+  console.log("req.body:", req.body);
+  console.log("===================");
+
+  const user = req.user as any | undefined;
+  const { userId, email } = req.body;
+
+  // Require authentication
+  if (!user?.id) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  // Validate body matches authenticated user (security check)
+  if (userId !== user.id && userId !== user.googleId) {
+    return res.status(403).json({ message: "User ID mismatch" });
+  }
+
+  if (!email) {
+    return res.status(400).json({ message: "Missing email" });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    // Check if already registered (prevents duplicates)
+    const existing = await client.query(
+      `SELECT id FROM people_to_notify 
+       WHERE user_id = $1 AND notified = FALSE`,
+      [user.id]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.json({ 
+        success: true, 
+        message: "Already registered for notification" 
+      });
+    }
+
+    // Insert new notification preference
+    const result = await client.query(
+      `INSERT INTO people_to_notify (user_id, email, created_at, notified)
+       VALUES ($1, $2, NOW(), FALSE)
+       RETURNING *`,
+      [user.id, email]
+    );
+
+    res.json({ 
+      success: true, 
+      message: "Notification preference saved",
+      data: result.rows[0]
+    });
+
+  } catch (err: any) {
+    console.error("Notify-when-ready POST error:", err);
+    res.status(500).json({
+      message: "Failed to save notification preference",
+      error: err.message,
+    });
+  } finally {
+    client.release();
+  }
+});
+
 export default router;
