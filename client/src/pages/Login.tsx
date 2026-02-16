@@ -1,10 +1,13 @@
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox"; 
 import { useLocation } from "wouter";
 import { Sparkles, ArrowLeft, Heart } from "lucide-react";
 import logoImage from "@assets/Full_Page_1766110908945.png";
+import { useState } from "react"; 
 
 export default function Login() {
   const [, setLocation] = useLocation();
+  const [acceptedTerms, setAcceptedTerms] = useState(false); 
   
   const handleGoogleLogin = () => {
     window.location.href = "/api/auth/google";
@@ -54,32 +57,63 @@ export default function Login() {
                   />
                 </div>
                 
-<div className="space-y-2">
-  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-    Welcome to
-  </p>
-  <h1 className="text-3xl md:text-4xl font-bold font-heading">
-    <span className="bg-gradient-to-r from-primary via-chart-2 to-chart-3 bg-clip-text text-transparent">
-      The Period Box
-    </span>
-  </h1>
-  <p className="text-muted-foreground pt-2">
-    Sign in to access your personalized period care 
-  </p>
-</div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                    Welcome to
+                  </p>
+                  <h1 className="text-3xl md:text-4xl font-bold font-heading">
+                    <span className="bg-gradient-to-r from-primary via-chart-2 to-chart-3 bg-clip-text text-transparent">
+                      The Period Box
+                    </span>
+                  </h1>
+                  <p className="text-muted-foreground pt-2">
+                    Sign in to access your personalized period care 
+                  </p>
+                </div>
               </div>
 
-              {/* Login Button */}
+              {/* Login Section */}
               <div className="space-y-4">
-                {/*<div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm font-medium text-primary mx-auto w-full justify-center">
-                  <Sparkles className="h-4 w-4" />
-                  Personalized Period Care
-                </div>*/}
+                {/* Terms Checkbox */}
+                <div className="flex items-start space-x-3 p-4 rounded-lg bg-primary/5 border border-primary/10">
+                  <Checkbox 
+                    id="terms" 
+                    checked={acceptedTerms}
+                    onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)}
+                    className="mt-0.5 border-primary/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
+                  <label 
+                    htmlFor="terms" 
+                    className="text-sm text-muted-foreground leading-relaxed cursor-pointer"
+                  >
+                    I agree to the{" "}
+                    <a 
+                      href="/terms-of-use.pdf" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline font-medium"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Terms of Use
+                    </a>
+                    {" "}and{" "}
+                    <a 
+                      href="/privacy-policy.pdf" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline font-medium"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Privacy Policy
+                    </a>
+                  </label>
+                </div>
 
                 <Button 
                   size="lg" 
                   onClick={handleGoogleLogin}
-                  className="w-full h-14 text-base font-semibold bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 shadow-sm hover:shadow-md transition-all group relative overflow-hidden"
+                  disabled={!acceptedTerms} // Disabled until checked
+                  className="w-full h-14 text-base font-semibold bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 shadow-sm hover:shadow-md transition-all group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-chart-2/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                   <span className="relative flex items-center justify-center gap-3">
@@ -104,28 +138,15 @@ export default function Login() {
                     Continue with Google
                   </span>
                 </Button>
+                
+                {!acceptedTerms && (
+                  <p className="text-xs text-center text-muted-foreground">
+                    Please accept the Terms of Use and Privacy Policy to continue
+                  </p>
+                )}
               </div>
-
-              {/* Trust indicators */}
-              {/*<div className="pt-4 border-t border-border/50">
-                <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1.5">
-                    <Heart className="h-3.5 w-3.5 text-primary" />
-                    Personalized
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5 text-chart-2" />
-                    Curated for you
-                  </span>
-                </div>
-              </div> */}
             </div>
           </div>
-
-          {/* Bottom text */}
-          {/*<p className="text-center text-sm text-muted-foreground mt-6">
-            By signing in, you agree to our Terms of Service and Privacy Policy
-          </p>*/}
         </div>
       </main>
     </div>

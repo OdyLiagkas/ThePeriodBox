@@ -102,16 +102,32 @@ export function Footer() {
               </li>
             </ul>
           </div>
-          {/*}
+          
           <div>
             <h4 className="font-semibold font-accent mb-4">Company</h4>
             <ul className="space-y-2 text-sm">
-              <li><span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Our Mission</span></li>
-              <li><span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Sustainability</span></li>
-              <li><span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Privacy Policy</span></li>
-              <li><span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">Terms of Service</span></li>
+              <li>
+                <a 
+                  href="/legal/privacy-policy.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Privacy Policy
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="/legal/terms-of-use.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Terms of Use
+                </a>
+              </li>
             </ul>
-          </div> */}
+          </div> 
         </div>
 
         <div className="mt-8 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4">

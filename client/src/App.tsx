@@ -12,6 +12,7 @@ import NotFound from "@/pages/not-found";
 import Account from "@/pages/Account";
 import Login from "@/pages/Login";
 import Surveylogin from "@/pages/Surveylogin";
+import PdfViewer from "@/pages/PdfViewer"
 
 import { useLocation } from "wouter";
 import { useEffect } from "react";
@@ -29,6 +30,7 @@ function Router() {
       <Route path="/account" component={Account} />
       <Route path="/login" component={Login} />
       <Route path="/survey-login" component={Surveylogin} />
+      <Route path="/:filename" component={PdfViewer} />
       <Route component={NotFound} />
     </Switch>
   );
