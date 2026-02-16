@@ -233,9 +233,14 @@ function ProductFeedbackCard({ product, onFeedback }: ProductFeedbackCardProps) 
 }
 
 /* ----------  NOTIFICATION PREFERENCE COMPONENT  ---------- */
-function NotificationPreference() {
+interface NotificationPreferenceProps {
+  onGoToSurvey: () => void;
+}
+
+function NotificationPreference({ onGoToSurvey }: NotificationPreferenceProps) {
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
 
   // Check server if user already opted in
   const { data: isSubscribed, isLoading: checkingStatus } = useQuery({
@@ -246,7 +251,7 @@ function NotificationPreference() {
       });
       if (!res.ok) throw new Error("Failed to check status");
       const data = await res.json();
-      return data.subscribed; // boolean from server
+      return data.subscribed;
     },
     enabled: isAuthenticated,
   });
@@ -347,20 +352,21 @@ function NotificationPreference() {
 
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
-          In the meantime, you can review your{" "}
+          In the meantime, you can{" "}
           <button 
-            onClick={() => {}} // You'd need to pass setActiveTab here or use context
+            onClick={onGoToSurvey}
             className="text-primary hover:underline font-medium"
           >
-            survey results
+            review your survey results
           </button>
           {" "}or{" "}
           <button 
-            onClick={() => {}} // Same here
+            onClick={() => setLocation("/survey")}
             className="text-primary hover:underline font-medium"
           >
             update your preferences
           </button>
+          {" "}by retaking the survey.
         </p>
       </div>
     </div>
@@ -440,45 +446,11 @@ export default function Account() {
         return (
           <div className="space-y-8 py-8">
             {/* NEW: Notification Preference Section */}
-            <NotificationPreference />
+            <NotificationPreference 
+              onGoToSurvey={() => setActiveTab('survey')} 
+            />
 
-            {/* COMMENTED OUT: Original Your Box Section 
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold font-heading">Your Box</h2>
-                <p className="text-muted-foreground">Curated products based on your survey results</p>
-              </div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/10 to-chart-2/10 rounded-full text-sm font-medium text-primary">
-                <Sparkles className="h-4 w-4" />
-                Personalized for you
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {boxProducts.map((product) => (
-                <ProductFeedbackCard 
-                  key={product.id} 
-                  product={product} 
-                  onFeedback={handleProductFeedback}
-                />
-              ))}
-            </div>
-
-            <Card className="bg-gradient-to-r from-primary/5 via-chart-2/5 to-chart-3/5 border-primary/20">
-              <CardContent className="p-6 flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold font-heading">Want different products?</h3>
-                  <p className="text-sm text-muted-foreground">Retake the survey to update your preferences</p>
-                </div>
-                <Button onClick={() => setLocation("/survey")} className="gap-2">
-                  <Sparkles className="h-4 w-4" />
-                  Update Preferences
-                </Button>
-              </CardContent>
-            </Card>
-            
-            */}
+            {/* COMMENTED OUT: Original Your Box Section */}
           </div>
         );
 
