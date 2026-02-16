@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { Trash2, AlertTriangle } from "lucide-react";
 
 /* ----------  TYPES  ---------- */
 interface PortalProduct {
@@ -56,6 +57,99 @@ interface LikedProduct {
 }
 
 type TabValue = 'box' | 'history' | 'survey' | 'orders';
+
+
+interface DeleteAccountButtonProps {
+  onDelete: () => void;
+}
+
+function DeleteAccountButton({ onDelete }: DeleteAccountButtonProps) {
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleFirstClick = () => {
+    setIsConfirming(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await onDelete();
+    } catch (error) {
+      setIsDeleting(false);
+      setIsConfirming(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsConfirming(false);
+  };
+
+  if (isConfirming) {
+    return (
+      <div className="fixed bottom-24 right-4 md:right-8 z-50 animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <Card className="border-destructive/50 shadow-xl bg-white max-w-sm">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              <span className="font-semibold">Are you sure?</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              This will permanently delete your account and all associated data. This action cannot be undone.
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                onClick={handleCancel}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="flex-1 gap-2"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <Sparkles className="h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    Yes, Delete
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed bottom-24 right-4 md:right-8 z-50">
+      <Button
+        variant="outline"
+        size="sm"
+        className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive hover:border-destructive shadow-md"
+        onClick={handleFirstClick}
+      >
+        <Trash2 className="h-4 w-4" />
+        Delete Account
+      </Button>
+    </div>
+  );
+}
+
+
+
 
 /* ----------  DEMO AUTH HOOK  ---------- */
 function useAuth() {
@@ -378,6 +472,7 @@ export default function Account() {
   const { user, isLoading, isAuthenticated, logout } = useAuth();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<TabValue>('box');
+  const { toast } = useToast();
 
   // Use the survey hook
   const { survey, isLoading: surveyLoading, error: surveyError } = useSurvey();
@@ -386,6 +481,35 @@ export default function Account() {
   const [likedProducts, setLikedProducts] = useState<LikedProduct[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [boxProducts, setBoxProducts] = useState<PortalProduct[]>(MOCK_BOX_PRODUCTS);
+  const deleteAccount = useMutation({
+  mutationFn: async () => {
+    const res = await fetch("/api/user", {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ message: res.statusText }));
+      throw new Error(errorData.message || "Failed to delete account");
+    }
+    return res.json();
+  },
+  onSuccess: () => {
+    toast({
+      title: "Account deleted",
+      description: "Your account has been permanently deleted.",
+    });
+    // Redirect to home page after deletion
+    window.location.href = "/";
+  },
+  onError: (error: any) => {
+    toast({
+      title: "Error deleting account",
+      description: error.message,
+      variant: "destructive",
+    });
+  },
+});
+
 
   /*  redirect if not logged in  */
   useEffect(() => {
