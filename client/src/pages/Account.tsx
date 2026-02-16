@@ -820,7 +820,7 @@ export default function Account() {
           </div>
         </div>
       </main>
-      
+      <DeleteAccountButton onDelete={() => deleteAccount.mutate()} />
       <Footer />
     </div>
   );
