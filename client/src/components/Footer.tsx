@@ -108,7 +108,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <a 
-                  href="/legal/privacy-policy.pdf"
+                  href="/privacy-policy.pdf"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"
@@ -118,7 +118,7 @@ export function Footer() {
               </li>
               <li>
                 <a 
-                  href="/legal/terms-of-use.pdf"
+                  href="/terms-of-use.pdf"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"
