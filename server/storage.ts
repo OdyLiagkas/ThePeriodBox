@@ -5,6 +5,8 @@ import {
   type InsertProduct,
   surveyResponses,
   products,
+  users,
+  peopleToNotify,
 } from "@shared/schema";
 import { db } from "./db";
 import { desc, eq, inArray } from "drizzle-orm";
@@ -12,13 +14,28 @@ import { desc, eq, inArray } from "drizzle-orm";
 export interface IStorage {
   createSurveyResponse(response: InsertSurveyResponse): Promise<SurveyResponse>;
   getSurveyResponseBySessionId(sessionId: string): Promise<SurveyResponse | undefined>;
-
   getAllProducts(): Promise<Product[]>;
   getProductsByIds(ids: string[]): Promise<Product[]>;
   seedProducts(products: InsertProduct[]): Promise<void>;
+  deletePeopleToNotifyByUserId(userId: string): Promise<void>;
+  deleteSurveyResponsesByUserId(userId: string): Promise<void>;
+  deleteUser(userId: string): Promise<void>;
 }
 
 export class PgStorage implements IStorage {
+
+  // Use db (imported) not this.db
+  async deletePeopleToNotifyByUserId(userId: string): Promise<void> {
+    await db.delete(peopleToNotify).where(eq(peopleToNotify.userId, userId));
+  }
+
+  async deleteSurveyResponsesByUserId(userId: string): Promise<void> {
+    await db.delete(surveyResponses).where(eq(surveyResponses.userId, userId));
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, userId));
+  }
 
   async createSurveyResponse(
     insertResponse: InsertSurveyResponse

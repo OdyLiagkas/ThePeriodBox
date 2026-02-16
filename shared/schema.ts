@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, jsonb, serial } from "drizzle-orm/pg-core"; // Added serial
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -11,13 +11,10 @@ export const surveyResponses = pgTable("survey_responses", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-
-
 export const insertSurveyResponseSchema = createInsertSchema(surveyResponses).omit({
   id: true,
   createdAt: true,
 });
-
 
 export type InsertSurveyResponse = z.infer<typeof insertSurveyResponseSchema>;
 export type SurveyResponse = typeof surveyResponses.$inferSelect;
@@ -39,5 +36,25 @@ export const insertProductSchema = createInsertSchema(products).omit({
 
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof products.$inferSelect;
+
+// ADD THESE TABLES:
+export const users = pgTable("users", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  googleId: varchar("google_id", { length: 255 }).unique(),
+  profileImageUrl: text("profile_image_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const peopleToNotify = pgTable("people_to_notify", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  notified: timestamp("notified"),
+});
 
 export * from "./models/auth";

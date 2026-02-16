@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertSurveyResponseSchema, type Product } from "@shared/schema";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 import { Resend } from "resend";
+import { pool } from "./db";
 
 // Seed initial product data
 async function seedInitialData() {
@@ -333,7 +334,34 @@ app.post("/api/survey-responses", async (req, res) => {
 // Initialize Resend with API key
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// Delete user account
+app.delete("/api/user", async (req, res) => {
+  const user = req.user as any | undefined;
 
+  if (!user?.id) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  try {
+    // Delete from people_to_notify first
+    await storage.deletePeopleToNotifyByUserId(user.id);
+    
+    // Delete survey responses
+    await storage.deleteSurveyResponsesByUserId(user.id);
+    
+    // Delete user
+    await storage.deleteUser(user.id);
+    
+    req.logout((err) => {
+      if (err) console.error("Logout error:", err);
+      res.json({ success: true, message: "Account deleted successfully" });
+    });
+    
+  } catch (error: any) {
+    console.error("Delete account error:", error);
+    res.status(500).json({ message: "Failed to delete account", error: error.message });
+  }
+});
 
   return httpServer;
 }
