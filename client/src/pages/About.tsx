@@ -22,7 +22,7 @@ export default function About() {
                 Our Mission
               </div>
               
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold font-heading leading-tight">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold font-heading">
                 Redefining{" "}
                 <span className="bg-gradient-to-r from-primary via-chart-2 to-chart-3 bg-clip-text text-transparent">
                   Period Care
