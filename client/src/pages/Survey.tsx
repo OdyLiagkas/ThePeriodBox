@@ -784,6 +784,9 @@ function SurveyQuestionComponent({
   const [otherText, setOtherText] = useState("");
   const [isOtherSelected, setIsOtherSelected] = useState(false);
 
+  // Define which options are exclusive (mutually exclusive with others)
+  const exclusiveOptions = ["none", "no", "no-significant-sensitivity", "none-of-the-above"];
+
   // Check if "other" is selected when value changes
   useEffect(() => {
     if ((type === "select-multiple" || type === "multiple") && allowOther) {
@@ -819,6 +822,41 @@ function SurveyQuestionComponent({
   const handleOtherTextChange = (text: string) => {
     setOtherText(text);
     // Don't update parent on every keystroke - wait for blur
+  };
+
+  // Handle option selection with exclusive logic
+  const handleOptionClick = (optionValue: string) => {
+    const current = Array.isArray(value) ? value : [];
+    const isSelected = current.includes(optionValue);
+    
+    // Check if this is an exclusive option
+    const isExclusive = exclusiveOptions.includes(optionValue);
+    
+    if (isSelected) {
+      // Deselect the clicked option
+      const filtered = current.filter((v) => v !== optionValue && !(typeof v === "string" && v.startsWith("other:")));
+      onChange(filtered);
+    } else {
+      // Check if we're selecting an exclusive option
+      if (isExclusive) {
+        // Clear all other selections and only select this one
+        onChange([optionValue]);
+      } else {
+        // Check if any exclusive option is currently selected
+        const hasExclusiveSelected = current.some(v => exclusiveOptions.includes(v));
+        
+        if (hasExclusiveSelected) {
+          // Replace exclusive option with this new selection
+          const filtered = current.filter((v) => !exclusiveOptions.includes(v));
+          onChange([...filtered, optionValue]);
+        } else {
+          // Normal multi-select behavior
+          if (!maxSelections || current.length < maxSelections) {
+            onChange([...current, optionValue]);
+          }
+        }
+      }
+    }
   };
 
   const renderQuestion = () => {
@@ -896,30 +934,26 @@ function SurveyQuestionComponent({
                 const isSelected = values.includes(option.value) || 
                   (option.value === "other" && values.some(v => typeof v === "string" && v.startsWith("other:")));
                 
+                // Check if this is an exclusive option
+                const isExclusive = exclusiveOptions.includes(option.value);
+                
                 return (
                   <button
                     key={option.value}
-                    onClick={() => {
-                      const current = Array.isArray(value) ? value : [];
-                      if (isSelected) {
-                        // Remove this option
-                        const filtered = current.filter((v) => v !== option.value && !(typeof v === "string" && v.startsWith("other:")));
-                        onChange(filtered);
-                      } else {
-                        if (!maxSelections || current.length < maxSelections) {
-                          onChange([...current, option.value]);
-                        }
-                      }
-                    }}
+                    onClick={() => handleOptionClick(option.value)}
                     className={`
                       flex items-center justify-between p-3 rounded-lg border-2 transition-all text-left
                       ${isSelected 
                         ? "border-primary bg-primary/5" 
                         : "border-border hover:border-primary/50"
                       }
+                      ${isExclusive ? "border-dashed" : ""}
                     `}
                   >
-                    <span className="font-medium">{option.label}</span>
+                    <span className="font-medium">
+                      {option.label}
+                      {isExclusive && <span className="text-xs text-muted-foreground ml-2">(select only this)</span>}
+                    </span>
                     {isSelected && <CheckCircle2 className="w-5 h-5 text-primary" />}
                   </button>
                 );
