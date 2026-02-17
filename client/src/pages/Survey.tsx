@@ -952,7 +952,7 @@ function SurveyQuestionComponent({
                   >
                     <span className="font-medium">
                       {option.label}
-                      {isExclusive && <span className="text-xs text-muted-foreground ml-2">(select only this)</span>}
+                      {isExclusive && <span className="text-xs text-muted-foreground ml-2"></span>}
                     </span>
                     {isSelected && <CheckCircle2 className="w-5 h-5 text-primary" />}
                   </button>
