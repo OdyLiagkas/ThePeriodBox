@@ -10,20 +10,36 @@ export function InstagramEmbed() {
     script.async = true;
     document.body.appendChild(script);
 
-    // Re-process embeds when script loads
     script.onload = () => {
       if ((window as any).instgrm) {
         (window as any).instgrm.Embeds.process();
       }
+
+      // Additional cleanup: force remove outlines after embed renders
+      setTimeout(() => {
+        const embeds = document.querySelectorAll('.instagram-media, .instagram-media *');
+        embeds.forEach((el) => {
+          const htmlEl = el as HTMLElement;
+          htmlEl.style.outline = 'none';
+          htmlEl.style.boxShadow = 'none';
+          htmlEl.setAttribute('tabindex', '-1');
+        });
+      }, 1000);
     };
 
     return () => {
-      document.body.removeChild(script);
+      if (script.parentNode) {
+        document.body.removeChild(script);
+      }
     };
   }, []);
 
   return (
-    <div ref={containerRef} className="flex justify-center">
+    <div 
+      ref={containerRef} 
+      className="flex justify-center instagram-embed-container"
+      style={{ outline: 'none' }}
+    >
       <blockquote
         className="instagram-media"
         data-instgrm-permalink="https://www.instagram.com/the_period_box/"
@@ -38,10 +54,12 @@ export function InstagramEmbed() {
           minWidth: "326px",
           padding: "0",
           width: "calc(100% - 40px)",
+          outline: "none",
         }}
       >
-        <div style={{ padding: "16px" }}>
+        <div style={{ padding: "16px", outline: "none" }}>
           <a
+            id="main_link"
             href="https://www.instagram.com/the_period_box/"
             style={{
               background: "#FFFFFF",
@@ -50,11 +68,20 @@ export function InstagramEmbed() {
               textAlign: "center",
               textDecoration: "none",
               width: "100%",
+              outline: "none",
             }}
             target="_blank"
             rel="noopener noreferrer"
+            tabIndex={-1}
           >
-            <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+            <div 
+              style={{ 
+                display: "flex", 
+                flexDirection: "row", 
+                alignItems: "center",
+                outline: "none",
+              }}
+            >
               <div
                 style={{
                   backgroundColor: "#F4F4F4",
@@ -63,9 +90,18 @@ export function InstagramEmbed() {
                   height: "40px",
                   marginRight: "14px",
                   width: "40px",
+                  outline: "none",
                 }}
               />
-              <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "center" }}>
+              <div 
+                style={{ 
+                  display: "flex", 
+                  flexDirection: "column", 
+                  flexGrow: 1, 
+                  justifyContent: "center",
+                  outline: "none",
+                }}
+              >
                 <div
                   style={{
                     backgroundColor: "#F4F4F4",
@@ -74,6 +110,7 @@ export function InstagramEmbed() {
                     height: "14px",
                     marginBottom: "6px",
                     width: "100px",
+                    outline: "none",
                   }}
                 />
                 <div
@@ -83,11 +120,12 @@ export function InstagramEmbed() {
                     flexGrow: 0,
                     height: "14px",
                     width: "60px",
+                    outline: "none",
                   }}
                 />
               </div>
             </div>
-            <div style={{ padding: "19% 0" }} />
+            <div style={{ padding: "19% 0", outline: "none" }} />
           </a>
           <p
             style={{
@@ -102,6 +140,7 @@ export function InstagramEmbed() {
               textAlign: "center",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
+              outline: "none",
             }}
           >
             <a
@@ -114,9 +153,11 @@ export function InstagramEmbed() {
                 fontWeight: "normal",
                 lineHeight: "17px",
                 textDecoration: "none",
+                outline: "none",
               }}
               target="_blank"
               rel="noopener noreferrer"
+              tabIndex={-1}
             >
               @the_period_box
             </a>

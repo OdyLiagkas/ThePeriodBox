@@ -352,3 +352,67 @@
     inset: -1px;
   }
 }
+
+
+/* ============================================
+   Instagram Embed - Remove Blue Focus Outline
+   ============================================ */
+
+/* Remove default focus outline on all Instagram embed elements */
+.instagram-media,
+.instagram-media *,
+.instagram-media:focus,
+.instagram-media *:focus,
+.instagram-media a,
+.instagram-media a:focus,
+.instagram-media div,
+.instagram-media div:focus,
+.instagram-media iframe,
+.instagram-media iframe:focus,
+.instagram-media blockquote,
+.instagram-media blockquote:focus,
+[data-instgrm-version],
+[data-instgrm-version] *,
+[data-instgrm-version]:focus,
+[data-instgrm-version] *:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Instagram's internal classes that get injected */
+._aado,
+._aado:focus,
+._aadq,
+._aadq:focus,
+._ab6-,
+._ab6-:focus,
+._aa08,
+._aa08:focus,
+._aa09,
+._aa09:focus,
+._aa0a,
+._aa0a:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove blue ring from embed container */
+.instagram-media {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Optional: Subtle custom focus for keyboard accessibility */
+.instagram-media a:focus-visible {
+  outline: 2px solid rgba(0, 0, 0, 0.1) !important;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.instagram-media:focus,
+.instagram-media *:focus,
+.instagram-media a:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
