@@ -60,59 +60,61 @@ const shouldShowGoals = (answers: Record<string, string | string[]>) => {
 // Helper to get auto-set answers for hidden questions AND clear answers for visible questions
 const getAutoSetAnswers = (answers: Record<string, string | string[]>): Record<string, string | string[]> => {
   const autoAnswers: Record<string, string | string[]> = {};
-  const interestsRaw = answers["product-interests"];
-  const interests = Array.isArray(interestsRaw) ? interestsRaw : [];
   
-  const hasTamponInterest = interests.includes("tampon-interest");
-  const hasPadInterest = interests.includes("pad-interest");
-  const hasLinerInterest = interests.includes("liner-interest");
+  // Parse interests robustly
+  let interests: string[] = [];
+  const raw = answers["product-interests"];
+  if (Array.isArray(raw)) {
+    interests = raw.filter(i => typeof i === "string");
+  } else if (typeof raw === "string") {
+    interests = raw.split(",").map(s => s.trim()).filter(Boolean);
+  }
   
-  // Handle tampon-applicator
-  if (!hasTamponInterest && !answers["tampon-applicator"]) {
+  const hasTampon = interests.includes("tampon-interest");
+  const hasPad = interests.includes("pad-interest");
+  const hasLiner = interests.includes("liner-interest");
+  
+  // Helper to get current array value
+  const getCurrentArray = (key: string): string[] => {
+    const val = answers[key];
+    return Array.isArray(val) ? val : [];
+  };
+  
+  // Tampon applicator
+  const tamponValues = getCurrentArray("tampon-applicator");
+  if (!hasTampon && !tamponValues.includes("no-tampons")) {
     autoAnswers["tampon-applicator"] = ["no-tampons"];
-  }
-  // If tampon interest IS selected but we have "no-tampons", clear it
-  if (hasTamponInterest && answers["tampon-applicator"]) {
-    const current = answers["tampon-applicator"] as string[];
-    if (current.includes("no-tampons")) {
-      autoAnswers["tampon-applicator"] = current.filter(v => v !== "no-tampons");
-    }
+  } else if (hasTampon && tamponValues.includes("no-tampons")) {
+    const filtered = tamponValues.filter(v => v !== "no-tampons");
+    autoAnswers["tampon-applicator"] = filtered.length > 0 ? filtered : [];
   }
   
-  // Handle pad-type
-  if (!hasPadInterest && !answers["pad-type"]) {
+  // Pad type
+  const padTypeValues = getCurrentArray("pad-type");
+  if (!hasPad && !padTypeValues.includes("no-pads")) {
     autoAnswers["pad-type"] = ["no-pads"];
-  }
-  // If pad interest IS selected but we have "no-pads", clear it
-  if (hasPadInterest && answers["pad-type"]) {
-    const current = answers["pad-type"] as string[];
-    if (current.includes("no-pads")) {
-      autoAnswers["pad-type"] = current.filter(v => v !== "no-pads");
-    }
+  } else if (hasPad && padTypeValues.includes("no-pads")) {
+    const filtered = padTypeValues.filter(v => v !== "no-pads");
+    autoAnswers["pad-type"] = filtered.length > 0 ? filtered : [];
   }
   
-  // Handle liner-type
-  if (!hasLinerInterest && !answers["liner-type"]) {
+  // Liner type
+  const linerTypeValues = getCurrentArray("liner-type");
+  if (!hasLiner && !linerTypeValues.includes("no-liners")) {
     autoAnswers["liner-type"] = ["no-liners"];
-  }
-  // If liner interest IS selected but we have "no-liners", clear it
-  if (hasLinerInterest && answers["liner-type"]) {
-    const current = answers["liner-type"] as string[];
-    if (current.includes("no-liners")) {
-      autoAnswers["liner-type"] = current.filter(v => v !== "no-liners");
-    }
+  } else if (hasLiner && linerTypeValues.includes("no-liners")) {
+    const filtered = linerTypeValues.filter(v => v !== "no-liners");
+    autoAnswers["liner-type"] = filtered.length > 0 ? filtered : [];
   }
   
-  // Handle pad-use
-  if (!hasPadInterest && !hasLinerInterest && !answers["pad-use"]) {
+  // Pad use
+  const padUseValues = getCurrentArray("pad-use");
+  const shouldHavePadUse = hasPad || hasLiner;
+  if (!shouldHavePadUse && !padUseValues.includes("no-pads-or-liners")) {
     autoAnswers["pad-use"] = ["no-pads-or-liners"];
-  }
-  // If pad OR liner interest IS selected but we have "no-pads-or-liners", clear it
-  if ((hasPadInterest || hasLinerInterest) && answers["pad-use"]) {
-    const current = answers["pad-use"] as string[];
-    if (current.includes("no-pads-or-liners")) {
-      autoAnswers["pad-use"] = current.filter(v => v !== "no-pads-or-liners");
-    }
+  } else if (shouldHavePadUse && padUseValues.includes("no-pads-or-liners")) {
+    const filtered = padUseValues.filter(v => v !== "no-pads-or-liners");
+    autoAnswers["pad-use"] = filtered.length > 0 ? filtered : [];
   }
   
   return autoAnswers;
@@ -1167,24 +1169,17 @@ export default function Survey() {
     if (!isLoading && !isAuthenticated) setLocation("/survey-login");
   }, [isLoading, isAuthenticated, setLocation]);
 
-  // Update visible questions and auto-set answers when answers change
-  useEffect(() => {
-    setSurveyQuestions(getAllQuestions());
-    
-    // Auto-set answers for hidden questions
-    const autoAnswers = getAutoSetAnswers(answers);
-    if (Object.keys(autoAnswers).length > 0) {
-      setAnswers(prev => ({
-        ...prev,
-        ...autoAnswers
-      }));
-    }
-    
-    // Reset step if current step is now beyond visible questions
-    if (currentStep >= visibleQuestions.length && visibleQuestions.length > 0) {
-      setCurrentStep(visibleQuestions.length - 1);
-    }
-  }, [answers["product-interests"]]); // Only re-run when product-interests changes
+// Update visible questions when product-interests changes
+useEffect(() => {
+  setSurveyQuestions(getAllQuestions());
+}, [answers["product-interests"]]);
+
+// Separate effect for step adjustment
+useEffect(() => {
+  if (currentStep >= visibleQuestions.length && visibleQuestions.length > 0) {
+    setCurrentStep(visibleQuestions.length - 1);
+  }
+}, [visibleQuestions.length]);
 
   // Separate effect for step adjustment to avoid loops
   useEffect(() => {
@@ -1260,9 +1255,17 @@ const submitSurvey = useMutation({
   const progressStep = currentStep + 1;
   const totalSteps = visibleQuestions.length;
 
-  const handleAnswer = (value: string | string[]) => {
-    setAnswers({ ...answers, [currentQuestion.id]: value });
-  };
+const handleAnswer = (value: string | string[]) => {
+  const newAnswers = { ...answers, [currentQuestion.id]: value };
+  
+  // If this is the product-interests question, immediately apply auto-answers
+  if (currentQuestion.id === "product-interests") {
+    const autoAnswers = getAutoSetAnswers(newAnswers);
+    Object.assign(newAnswers, autoAnswers);
+  }
+  
+  setAnswers(newAnswers);
+};
 
   const handleNext = () => {
     if (isLastQuestion) {
