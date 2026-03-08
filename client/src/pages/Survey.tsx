@@ -57,6 +57,38 @@ const shouldShowGoals = (answers: Record<string, string | string[]>) => {
   return ["no-change", "on-bc", "stopped-bc", "started-bc"].includes(stage);
 };
 
+// Helper to get auto-set answers for hidden questions
+const getAutoSetAnswers = (answers: Record<string, string | string[]>): Record<string, string | string[]> => {
+  const autoAnswers: Record<string, string | string[]> = {};
+  const interests = answers["product-interests"] as string[] || [];
+  
+  // Only apply auto-answers if product-interests has been answered
+  if (answers["product-interests"]) {
+    // If tampons not selected, auto-set tampon-applicator to "no-tampons"
+    if (!interests.includes("tampon-interest")) {
+      autoAnswers["tampon-applicator"] = ["no-tampons"];
+    }
+    
+    // If pads not selected, auto-set pad-type to "no-pads"
+    if (!interests.includes("pad-interest")) {
+      autoAnswers["pad-type"] = ["no-pads"];
+    }
+    
+    // If liners not selected, auto-set liner-type to "no-liners"
+    if (!interests.includes("liner-interest")) {
+      autoAnswers["liner-type"] = ["no-liners"];
+    }
+    
+    // For pad-use: if neither pads nor liners selected, auto-set to "no-pads-or-liners"
+    if (!interests.includes("pad-interest") && !interests.includes("liner-interest")) {
+      autoAnswers["pad-use"] = ["no-pads-or-liners"];
+    }
+  }
+  
+  return autoAnswers;
+};
+
+
 // Base questions (shown to everyone)
 const baseQuestions: Question[] = [
   {
@@ -71,9 +103,9 @@ const baseQuestions: Question[] = [
     description: "Select all that apply.",
     type: "multiple",
     options: [
-      { value: "exploring", label: "Exploring new brands" },
+      //{ value: "exploring", label: "Exploring new brands" },
       { value: "better-product", label: "Finding a product that works better for my body" },
-      { value: "new-type", label: "Introducing a new product type" },
+      { value: "new-type", label: "Introducing an additional product" },
       { value: "switching", label: "Switching products" },
       { value: "organic", label: "Switch to fully organic products" },
     ],
@@ -84,85 +116,161 @@ const baseQuestions: Question[] = [
 // Menstruating path questions (A, B, C, D selected)
 const menstruatingQuestions: Question[] = [
   {
+    id: "product-interests",
+    question: "What types of products are you interested in trying?",
+    description: "Check all that apply. The survey will change based on selection",
+    type: "multiple",
+    options: [
+      { value: "tampon-interest", label: "Tampons" },
+      { value: "pad-interest", label: "Pads" },
+      { value: "liner-interest", label: "Liners" },
+    ],
+  },
+
+  {
     id: "flow",
     question: "How would you describe your flow?",
     type: "single",
     options: [
       { value: "light", label: "Light – minimal flow 1-2 days" },
       { value: "moderate", label: "Moderate – regular flow 3-5 days" },
-      { value: "heavy", label: "Heavy – significant flow, 5+ days" },
+      { value: "heavy", label: "Heavy – significant flow, 4-5+ days" },
+      { value: "very-heavy", label: "Very heavy – very significant flow, 5+ days" },
       { value: "heavy-then-moderate", label: "Heavy the first ~2 days, moderate days 3/4, light last part of period" },
       { value: "varies", label: "Varies – changes month to month" },
     ],
   },
+
+
+//  {
+//    id: "past-products",
+//    question: "Which products have you used in the past?",
+//    description: "Check all that apply.",
+//    type: "multiple",
+//    options: [
+//      { value: "tampons", label: "Tampons" },
+//      { value: "pads", label: "Pads" },
+//      { value: "cups", label: "Menstrual cups" },
+//      { value: "discs", label: "Menstrual discs" },
+//      { value: "underwear", label: "Period underwear" },
+//      { value: "liners", label: "Panty liners" },
+//    ],
+//  },
   {
-    id: "past-products",
-    question: "Which products have you used in the past?",
+    id: "organic-preference",
+    question: "What materials would you like to try?",
     description: "Check all that apply.",
     type: "multiple",
     options: [
-      { value: "tampons", label: "Tampons" },
-      { value: "pads", label: "Pads" },
-      { value: "cups", label: "Menstrual cups" },
-      { value: "discs", label: "Menstrual discs" },
-      { value: "underwear", label: "Period underwear" },
-      { value: "liners", label: "Panty liners" },
+      { value: "cotton-only", label: "100% Organic Cotton, nothing else" },
+      { value: "cotton-blend", label: "Cotton blends (Organic Cotton top sheet/blend)" },
+      { value: "alternative", label: "Cotton with alternative fibers (e.g. bamboo, hemp)" },
+      { value: "hypoallergenic", label: "Products with hypoallergenic materials" },
+      { value: "material-unimportant", label: "All types of materials. Not important to me" },
     ],
   },
-  {
-    id: "organic-preference",
-    question: "Do you prefer organic / natural materials?",
-    type: "single",
-    options: [
-      { value: "always", label: "Yes, always" },
-      { value: "sometimes", label: "Sometimes / open to trying" },
-      { value: "not-important", label: "Not important to me" },
-    ],
-  },
+
+
   {
     id: "tampon-applicator",
-    question: "For tampons, do you prefer:",
-    type: "single",
-    options: [
-      { value: "plastic", label: "Plastic applicators" },
-      { value: "cardboard", label: "Cardboard" },
-      { value: "no-applicator", label: "No applicator (digital)" },
-      { value: "no-preference", label: "Does not matter" },
-    ],
-  },
-  {
-    id: "leaks",
-    question: "Have you ever had leaks with your current products?",
-    type: "single",
-    options: [
-      { value: "often", label: "Often" },
-      { value: "sometimes", label: "Sometimes" },
-      { value: "rarely", label: "Rarely / never" },
-    ],
-  },
-  {
-    id: "sensitivities",
-    question: "Do you have any sensitivities?",
-    description: "Select all that apply. We'll filter out products that may not work for you.",
+    question: "What type of tampon applicator would you like to try?",
+    description: "Check all that apply.",
     type: "multiple",
     options: [
-      { value: "fragrance", label: "Fragrance sensitivity" },
-      { value: "latex", label: "Latex allergy" },
-      { value: "hypoallergenic", label: "Prefer hypoallergenic materials" },
-      { value: "none", label: "No known sensitivities" },
+      { value: "plastic-extended", label: "Plastic fully extended applicator" },
+      { value: "plastic-compact", label: "Plastic compact applicator (Extendable)" },
+      { value: "cardboard", label: "Cardboard applicator" },
+      { value: "no-applicator", label: "No applicator (digital)" },
     ],
+    conditional: (answers) => {
+      const interests = answers["product-interests"] as string[] || [];
+      return interests.includes("tampon-interest");
+    },
   },
+
   {
-    id: "comfort",
-    question: "Do you feel your current products are comfortable?",
-    type: "single",
+    id: "pad-use",
+    question: "What are you using your pads and liners for?",
+    description: "Check all that apply.",
+    type: "multiple",
     options: [
-      { value: "very", label: "Yes, very" },
-      { value: "sometimes", label: "Sometimes, but not always" },
-      { value: "struggle", label: "No, I struggle with comfort" },
-      { value: "heavy-struggle", label: "Not at all, I struggle a lot"},
+      { value: "sleeping-protection", label: "I'm using them when I am sleeping" },
+      { value: "day-protection", label: "During the day when I'm on my period" },
+      { value: "extra-protection", label: "I use them as extra protection with tampons" },
+      { value: "extra-safety", label: "Just in case, even when off period (e.g. traveling)" },
     ],
+    conditional: (answers) => {
+      const interests = answers["product-interests"] as string[] || [];
+      return interests.includes("pad-interest") || interests.includes("liner-interest");
+    },
   },
+
+  {
+    id: "pad-type",
+    question: "What kind of pads would you like to try?",
+    description: "Check all that apply.",
+    type: "multiple",
+    options: [
+      { value: "wingless", label: "Wingless pads" },
+      { value: "single-wings", label: "Pads with single wings" },
+      { value: "double-wings", label: "Pads with double wings (recommended for heavy flow)" },
+      { value: "rear-coverage", label: "Pads with extra rear coverage (recommended for heavy flow)" },
+    ],
+    conditional: (answers) => {
+      const interests = answers["product-interests"] as string[] || [];
+      return interests.includes("pad-interest");
+    },
+  },
+
+  {
+    id: "liner-type",
+    question: "Any preference for liners?",
+    description: "Check all that apply.",
+    type: "multiple",
+    options: [
+      { value: "standard-liner", label: "Standard liners" },
+      { value: "thong-liner", label: "Thong liners" },
+    ],
+    conditional: (answers) => {
+      const interests = answers["product-interests"] as string[] || [];
+      return interests.includes("liner-interest");
+    },
+  },
+
+
+//  {
+//    id: "leaks",
+//    question: "Have you ever had leaks with your current products?",
+//    type: "single",
+//    options: [
+//      { value: "often", label: "Often" },
+//      { value: "sometimes", label: "Sometimes" },
+//      { value: "rarely", label: "Rarely / never" },
+//    ],
+//  },
+//  {
+//    id: "sensitivities",
+//    question: "Do you have any sensitivities?",
+//    description: "Select all that apply. We'll filter out products that may not work for you.",
+//    type: "multiple",
+//    options: [
+//      { value: "fragrance", label: "Fragrance sensitivity" },
+//      { value: "latex", label: "Latex allergy" },
+//      { value: "hypoallergenic", label: "Prefer hypoallergenic materials" },
+//      { value: "none", label: "No known sensitivities" },
+//    ],
+//  },
+//  {  //////////////////////////////////////////////////////////////////////////  COMFORT HIDDEN FOR NOW
+//    id: "comfort",
+//    question: "Do you feel your current products are comfortable?",
+//    type: "single",
+//    options: [
+//      { value: "very", label: "Yes, very" },
+//      { value: "sometimes", label: "Sometimes, but not always" },
+//      { value: "struggle", label: "No, I struggle with comfort" },
+//      { value: "heavy-struggle", label: "Not at all, I struggle a lot"},
+//    ],
+//  },
   //{
     //id: "current-brand",
     //question: "Which brand(s) are you currently using?",
@@ -194,42 +302,42 @@ const menstruatingQuestions: Question[] = [
       //{ value: "other", label: "Other" },
     //],
   //},
-  {
-    id: "lifestyle",
-    question: "What's your typical daily routine?",
-    type: "single",
-    options: [
-      { value: "sedentary", label: "Mostly sitting - Office work, studying" },
-      { value: "moderate", label: "Moderate activity - Walking, light exercise" },
-      { value: "active", label: "Very active - Running, sports, gym workouts" },
-      { value: "mixed", label: "Mixed - Varies day to day" },
-    ],
-  },
-  {
-    id: "priorities",
-    question: "What matters most to you for your period products?",
-    description: "Select all that apply.",
-    type: "multiple",
-    options: [
-      { value: "organic", label: "Organic & natural materials" },
-      { value: "eco", label: "Eco-friendly & sustainable" },
-      { value: "comfort", label: "Maximum comfort" },
-      { value: "protection", label: "Leak-proof protection" },
-     // { value: "discreet", label: "Discreet & portable" },
-     // { value: "budget", label: "Budget-friendly" },
-    ],
-  },
-  {
-    id: "interested-products",
-    question: "Which products are you interested in trying or exploring new brands?",
-    description: "We'll focus on these in your recommendations.",
-    type: "multiple",
-    options: [
-      { value: "tampons", label: "Tampons" },
-      { value: "pads", label: "Pads" },
-      { value: "liners", label: "Panty liners" },
-    ],
-  },
+//  { //////////////////////////////////////////////////////////////////////////  PERFORMANCE HIDDEN FOR NOW
+//    id: "lifestyle",
+//    question: "What's your typical daily routine?",
+//    type: "single",
+//    options: [
+//      { value: "sedentary", label: "Mostly sitting - Office work, studying" },
+//      { value: "moderate", label: "Moderate activity - Walking, light exercise" },
+//      { value: "active", label: "Very active - Running, sports, gym workouts" },
+//      { value: "mixed", label: "Mixed - Varies day to day" },
+//    ],
+//  },
+//  { //////////////////////////////////////////////////////////////////////////  PRIORITIES HIDDEN FOR NOW
+//    id: "priorities",
+//    question: "What matters most to you for your period products?",
+//    description: "Select all that apply.",
+//    type: "multiple",
+//    options: [
+//      { value: "organic", label: "Organic & natural materials" },
+//      { value: "eco", label: "Eco-friendly & sustainable" },
+//      { value: "comfort", label: "Maximum comfort" },
+//      { value: "protection", label: "Leak-proof protection" },
+//     // { value: "discreet", label: "Discreet & portable" },
+//     // { value: "budget", label: "Budget-friendly" },
+//    ],
+//  },
+//  {  //////////////////////////////////////////////////////////////////////////  OLD INTERESTED_PRODUCTS
+//    id: "interested-products",
+//    question: "Which products are you interested in trying or exploring new brands?",
+//    description: "We'll focus on these in your recommendations.",
+//    type: "multiple",
+//    options: [
+//      { value: "tampons", label: "Tampons" },
+//      { value: "pads", label: "Pads" },
+//      { value: "liners", label: "Panty liners" },
+//    ],
+//  },
 //  {
 //    id: "most-important",
 //    question: "What's most important to you when trying a new product?",
@@ -637,7 +745,17 @@ const getAllQuestions = (): Question[] => {
     ...baseQuestions,
     ...menstruatingQuestions.map(q => ({
       ...q,
-      conditional: (answers: Record<string, string | string[]>) => getUserPath(answers) === "menstruating"
+      conditional: (answers: Record<string, string | string[]>) => {
+        // First check if we're on the menstruating path
+        if (getUserPath(answers) !== "menstruating") return false;
+        
+        // Then apply question-specific conditional if it exists
+        if (q.conditional) {
+          return q.conditional(answers);
+        }
+        
+        return true;
+      }
     })),
     ...pregnantQuestions.map(q => ({
       ...q,
@@ -786,7 +904,7 @@ function SurveyQuestionComponent({
   const [isOtherSelected, setIsOtherSelected] = useState(false);
 
   // Define which options are exclusive (mutually exclusive with others)
-  const exclusiveOptions = ["none", "no", "no-significant-sensitivity", "none-of-the-above"];
+  const exclusiveOptions = ["none", "no", "no-significant-sensitivity", "none-of-the-above", "material-unimportant"];
 
   // Check if "other" is selected when value changes
   useEffect(() => {
@@ -1019,14 +1137,31 @@ export default function Survey() {
     if (!isLoading && !isAuthenticated) setLocation("/survey-login");
   }, [isLoading, isAuthenticated, setLocation]);
 
-  // Update visible questions when answers change (for path switching)
+  // Update visible questions and auto-set answers when answers change
   useEffect(() => {
     setSurveyQuestions(getAllQuestions());
+    
+    // Auto-set answers for hidden questions
+    const autoAnswers = getAutoSetAnswers(answers);
+    if (Object.keys(autoAnswers).length > 0) {
+      setAnswers(prev => ({
+        ...prev,
+        ...autoAnswers
+      }));
+    }
+    
     // Reset step if current step is now beyond visible questions
     if (currentStep >= visibleQuestions.length && visibleQuestions.length > 0) {
       setCurrentStep(visibleQuestions.length - 1);
     }
-  }, [answers]);
+  }, [answers["product-interests"]]); // Only re-run when product-interests changes
+
+  // Separate effect for step adjustment to avoid loops
+  useEffect(() => {
+    if (currentStep >= visibleQuestions.length && visibleQuestions.length > 0) {
+      setCurrentStep(visibleQuestions.length - 1);
+    }
+  }, [visibleQuestions.length]);
 
 const submitSurvey = useMutation({
   mutationFn: async (surveyData: { answers: Record<string, string | string[]> }) => {
