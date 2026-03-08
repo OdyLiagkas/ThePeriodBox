@@ -57,31 +57,61 @@ const shouldShowGoals = (answers: Record<string, string | string[]>) => {
   return ["no-change", "on-bc", "stopped-bc", "started-bc"].includes(stage);
 };
 
-// Helper to get auto-set answers for hidden questions
+// Helper to get auto-set answers for hidden questions AND clear answers for visible questions
 const getAutoSetAnswers = (answers: Record<string, string | string[]>): Record<string, string | string[]> => {
   const autoAnswers: Record<string, string | string[]> = {};
-  const interests = answers["product-interests"] as string[] || [];
+  const interestsRaw = answers["product-interests"];
+  const interests = Array.isArray(interestsRaw) ? interestsRaw : [];
   
-  // Only apply auto-answers if product-interests has been answered
-  if (answers["product-interests"]) {
-    // If tampons not selected, auto-set tampon-applicator to "no-tampons"
-    if (!interests.includes("tampon-interest")) {
-      autoAnswers["tampon-applicator"] = ["no-tampons"];
+  const hasTamponInterest = interests.includes("tampon-interest");
+  const hasPadInterest = interests.includes("pad-interest");
+  const hasLinerInterest = interests.includes("liner-interest");
+  
+  // Handle tampon-applicator
+  if (!hasTamponInterest && !answers["tampon-applicator"]) {
+    autoAnswers["tampon-applicator"] = ["no-tampons"];
+  }
+  // If tampon interest IS selected but we have "no-tampons", clear it
+  if (hasTamponInterest && answers["tampon-applicator"]) {
+    const current = answers["tampon-applicator"] as string[];
+    if (current.includes("no-tampons")) {
+      autoAnswers["tampon-applicator"] = current.filter(v => v !== "no-tampons");
     }
-    
-    // If pads not selected, auto-set pad-type to "no-pads"
-    if (!interests.includes("pad-interest")) {
-      autoAnswers["pad-type"] = ["no-pads"];
+  }
+  
+  // Handle pad-type
+  if (!hasPadInterest && !answers["pad-type"]) {
+    autoAnswers["pad-type"] = ["no-pads"];
+  }
+  // If pad interest IS selected but we have "no-pads", clear it
+  if (hasPadInterest && answers["pad-type"]) {
+    const current = answers["pad-type"] as string[];
+    if (current.includes("no-pads")) {
+      autoAnswers["pad-type"] = current.filter(v => v !== "no-pads");
     }
-    
-    // If liners not selected, auto-set liner-type to "no-liners"
-    if (!interests.includes("liner-interest")) {
-      autoAnswers["liner-type"] = ["no-liners"];
+  }
+  
+  // Handle liner-type
+  if (!hasLinerInterest && !answers["liner-type"]) {
+    autoAnswers["liner-type"] = ["no-liners"];
+  }
+  // If liner interest IS selected but we have "no-liners", clear it
+  if (hasLinerInterest && answers["liner-type"]) {
+    const current = answers["liner-type"] as string[];
+    if (current.includes("no-liners")) {
+      autoAnswers["liner-type"] = current.filter(v => v !== "no-liners");
     }
-    
-    // For pad-use: if neither pads nor liners selected, auto-set to "no-pads-or-liners"
-    if (!interests.includes("pad-interest") && !interests.includes("liner-interest")) {
-      autoAnswers["pad-use"] = ["no-pads-or-liners"];
+  }
+  
+  // Handle pad-use
+  if (!hasPadInterest && !hasLinerInterest && !answers["pad-use"]) {
+    autoAnswers["pad-use"] = ["no-pads-or-liners"];
+  }
+  // If pad OR liner interest IS selected but we have "no-pads-or-liners", clear it
+  if ((hasPadInterest || hasLinerInterest) && answers["pad-use"]) {
+    const current = answers["pad-use"] as string[];
+    if (current.includes("no-pads-or-liners")) {
+      autoAnswers["pad-use"] = current.filter(v => v !== "no-pads-or-liners");
     }
   }
   
