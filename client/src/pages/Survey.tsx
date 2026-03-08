@@ -190,7 +190,7 @@ const menstruatingQuestions: Question[] = [
 
   {
     id: "pad-use",
-    question: "What are you using your pads and liners for?",
+    question: "What would you be using pads or liners for?",
     description: "Check all that apply.",
     type: "multiple",
     options: [
