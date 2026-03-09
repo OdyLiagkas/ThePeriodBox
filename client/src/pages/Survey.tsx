@@ -1259,24 +1259,14 @@ const handleAnswer = (value: string | string[]) => {
 
 const handleNext = () => {
   if (isLastQuestion) {
-    // Use functional update to ensure we have the latest state including all product-interest selections
     setAnswers(prevAnswers => {
       const autoAnswers = getAutoSetAnswers(prevAnswers);
       const finalAnswers = { ...prevAnswers, ...autoAnswers };
-      
-      // Submit with cleaned up answers
       submitSurvey.mutate({ answers: finalAnswers });
-      
       return finalAnswers;
     });
   } else {
-    // Apply auto-answers using functional update to get latest state
-    setAnswers(prevAnswers => {
-      const autoAnswers = getAutoSetAnswers(prevAnswers);
-      return { ...prevAnswers, ...autoAnswers };
-    });
-    
-    // Navigate to next step
+    // Do NOT apply auto-answers mid-survey — just advance
     setCurrentStep(currentStep + 1);
   }
 };
