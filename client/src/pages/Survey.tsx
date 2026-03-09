@@ -1269,15 +1269,18 @@ const handleAnswer = (value: string | string[]) => {
   setAnswers(newAnswers);
 };
 
-  const handleNext = () => {
-    if (isLastQuestion) {
-      submitSurvey.mutate({ answers }); 
-      console.log("Survey completed with answers:", answers);
-    } else {
-      setCurrentStep(currentStep + 1);
-      console.log(`Moving to question ${currentStep + 2}`);
-    }
-  };
+const handleNext = () => {
+  if (isLastQuestion) {
+    // Final cleanup before submission
+    const finalAnswers = { ...answers };
+    const autoAnswers = getAutoSetAnswers(finalAnswers);
+    Object.assign(finalAnswers, autoAnswers);
+    
+    submitSurvey.mutate({ answers: finalAnswers }); 
+  } else {
+    setCurrentStep(currentStep + 1);
+  }
+};
 
   const handlePrevious = () => {
     // If going back from the second question to the first, clear all answers
