@@ -1175,16 +1175,20 @@ export default function Survey() {
 useEffect(() => {
   setSurveyQuestions(getAllQuestions());
   
-  // Apply auto-answers to ensure consistency
-  const autoAnswers = getAutoSetAnswers(answers);
-  const hasChanges = Object.entries(autoAnswers).some(([key, val]) => {
-    const current = answers[key];
-    return JSON.stringify(current) !== JSON.stringify(val);
+  // Apply auto-answers to ensure consistency - use functional update to get latest state
+  setAnswers(prevAnswers => {
+    const autoAnswers = getAutoSetAnswers(prevAnswers);
+    const hasChanges = Object.entries(autoAnswers).some(([key, val]) => {
+      const current = prevAnswers[key];
+      return JSON.stringify(current) !== JSON.stringify(val);
+    });
+    
+    if (hasChanges) {
+      console.log("Effect applying auto-answers:", autoAnswers);
+      return { ...prevAnswers, ...autoAnswers };
+    }
+    return prevAnswers;
   });
-  
-  if (hasChanges) {
-    setAnswers(prev => ({ ...prev, ...autoAnswers }));
-  }
 }, [answers["product-interests"]]);
 
   // Separate effect for step adjustment to avoid loops
