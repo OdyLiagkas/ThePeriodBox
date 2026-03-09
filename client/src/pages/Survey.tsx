@@ -73,48 +73,28 @@ const getAutoSetAnswers = (answers: Record<string, string | string[]>): Record<s
   const hasTampon = interests.includes("tampon-interest");
   const hasPad = interests.includes("pad-interest");
   const hasLiner = interests.includes("liner-interest");
-  
-  // Helper to get current array value
-  const getCurrentArray = (key: string): string[] => {
-    const val = answers[key];
-    return Array.isArray(val) ? val : [];
-  };
-  
-  // Tampon applicator
-  const tamponValues = getCurrentArray("tampon-applicator");
-  if (!hasTampon && !tamponValues.includes("no-tampons")) {
+
+  // Only set no-X flags for products NOT selected.
+  // Never touch keys where the user already has real answers.
+
+  // Tampon applicator — only auto-set if user didn't select tampons
+  if (!hasTampon) {
     autoAnswers["tampon-applicator"] = ["no-tampons"];
-  } else if (hasTampon && tamponValues.includes("no-tampons")) {
-    const filtered = tamponValues.filter(v => v !== "no-tampons");
-    autoAnswers["tampon-applicator"] = filtered.length > 0 ? filtered : [];
   }
   
-  // Pad type
-  const padTypeValues = getCurrentArray("pad-type");
-  if (!hasPad && !padTypeValues.includes("no-pads")) {
+  // Pad type — only auto-set if user didn't select pads
+  if (!hasPad) {
     autoAnswers["pad-type"] = ["no-pads"];
-  } else if (hasPad && padTypeValues.includes("no-pads")) {
-    const filtered = padTypeValues.filter(v => v !== "no-pads");
-    autoAnswers["pad-type"] = filtered.length > 0 ? filtered : [];
   }
   
-  // Liner type
-  const linerTypeValues = getCurrentArray("liner-type");
-  if (!hasLiner && !linerTypeValues.includes("no-liners")) {
+  // Liner type — only auto-set if user didn't select liners
+  if (!hasLiner) {
     autoAnswers["liner-type"] = ["no-liners"];
-  } else if (hasLiner && linerTypeValues.includes("no-liners")) {
-    const filtered = linerTypeValues.filter(v => v !== "no-liners");
-    autoAnswers["liner-type"] = filtered.length > 0 ? filtered : [];
   }
   
-  // Pad use
-  const padUseValues = getCurrentArray("pad-use");
-  const shouldHavePadUse = hasPad || hasLiner;
-  if (!shouldHavePadUse && !padUseValues.includes("no-pads-or-liners")) {
+  // Pad use — only auto-set if user selected neither pads nor liners
+  if (!hasPad && !hasLiner) {
     autoAnswers["pad-use"] = ["no-pads-or-liners"];
-  } else if (shouldHavePadUse && padUseValues.includes("no-pads-or-liners")) {
-    const filtered = padUseValues.filter(v => v !== "no-pads-or-liners");
-    autoAnswers["pad-use"] = filtered.length > 0 ? filtered : [];
   }
   
   return autoAnswers;
