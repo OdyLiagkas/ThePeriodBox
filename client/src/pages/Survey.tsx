@@ -1176,13 +1176,6 @@ useEffect(() => {
   setSurveyQuestions(getAllQuestions());
 }, [answers["product-interests"]]);
 
-// Separate effect for step adjustment
-useEffect(() => {
-  if (currentStep >= visibleQuestions.length && visibleQuestions.length > 0) {
-    setCurrentStep(visibleQuestions.length - 1);
-  }
-}, [visibleQuestions.length]);
-
   // Separate effect for step adjustment to avoid loops
   useEffect(() => {
     if (currentStep >= visibleQuestions.length && visibleQuestions.length > 0) {
@@ -1258,13 +1251,11 @@ const submitSurvey = useMutation({
   const totalSteps = visibleQuestions.length;
 
 const handleAnswer = (value: string | string[]) => {
-  const newAnswers = { ...answers, [currentQuestion.id]: value };
+  let newAnswers = { ...answers, [currentQuestion.id]: value };
   
-  // If this is the product-interests question, immediately apply auto-answers
-  if (currentQuestion.id === "product-interests") {
-    const autoAnswers = getAutoSetAnswers(newAnswers);
-    Object.assign(newAnswers, autoAnswers);
-  }
+  // Always apply auto-answers to ensure consistency
+  const autoAnswers = getAutoSetAnswers(newAnswers);
+  newAnswers = { ...newAnswers, ...autoAnswers };
   
   setAnswers(newAnswers);
 };
