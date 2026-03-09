@@ -1171,32 +1171,18 @@ export default function Survey() {
     if (!isLoading && !isAuthenticated) setLocation("/survey-login");
   }, [isLoading, isAuthenticated, setLocation]);
 
-// Update visible questions and apply auto-answers when product-interests changes
+// Update visible questions when product-interests changes
 useEffect(() => {
   setSurveyQuestions(getAllQuestions());
-  
-  // Apply auto-answers to ensure consistency - use functional update to get latest state
-  setAnswers(prevAnswers => {
-    const autoAnswers = getAutoSetAnswers(prevAnswers);
-    const hasChanges = Object.entries(autoAnswers).some(([key, val]) => {
-      const current = prevAnswers[key];
-      return JSON.stringify(current) !== JSON.stringify(val);
-    });
-    
-    if (hasChanges) {
-      console.log("Effect applying auto-answers:", autoAnswers);
-      return { ...prevAnswers, ...autoAnswers };
-    }
-    return prevAnswers;
-  });
 }, [answers["product-interests"]]);
 
-  // Separate effect for step adjustment to avoid loops
-  useEffect(() => {
-    if (currentStep >= visibleQuestions.length && visibleQuestions.length > 0) {
-      setCurrentStep(visibleQuestions.length - 1);
-    }
-  }, [visibleQuestions.length]);
+
+// Separate effect for step adjustment
+useEffect(() => {
+  if (currentStep >= visibleQuestions.length && visibleQuestions.length > 0) {
+    setCurrentStep(visibleQuestions.length - 1);
+  }
+}, [visibleQuestions.length]);
 
 const submitSurvey = useMutation({
   mutationFn: async (surveyData: { answers: Record<string, string | string[]> }) => {
@@ -1266,24 +1252,31 @@ const submitSurvey = useMutation({
   const totalSteps = visibleQuestions.length;
 
 const handleAnswer = (value: string | string[]) => {
-  let newAnswers = { ...answers, [currentQuestion.id]: value };
-  
-  // Always apply auto-answers to ensure consistency
-  const autoAnswers = getAutoSetAnswers(newAnswers);
-  newAnswers = { ...newAnswers, ...autoAnswers };
-  
+  // Simple state update - no auto-answers here anymore
+  const newAnswers = { ...answers, [currentQuestion.id]: value };
   setAnswers(newAnswers);
 };
 
 const handleNext = () => {
   if (isLastQuestion) {
-    // Final cleanup before submission
-    const finalAnswers = { ...answers };
-    const autoAnswers = getAutoSetAnswers(finalAnswers);
-    Object.assign(finalAnswers, autoAnswers);
-    
-    submitSurvey.mutate({ answers: finalAnswers }); 
+    // Use functional update to ensure we have the latest state including all product-interest selections
+    setAnswers(prevAnswers => {
+      const autoAnswers = getAutoSetAnswers(prevAnswers);
+      const finalAnswers = { ...prevAnswers, ...autoAnswers };
+      
+      // Submit with cleaned up answers
+      submitSurvey.mutate({ answers: finalAnswers });
+      
+      return finalAnswers;
+    });
   } else {
+    // Apply auto-answers using functional update to get latest state
+    setAnswers(prevAnswers => {
+      const autoAnswers = getAutoSetAnswers(prevAnswers);
+      return { ...prevAnswers, ...autoAnswers };
+    });
+    
+    // Navigate to next step
     setCurrentStep(currentStep + 1);
   }
 };
