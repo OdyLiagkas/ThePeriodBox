@@ -1171,9 +1171,20 @@ export default function Survey() {
     if (!isLoading && !isAuthenticated) setLocation("/survey-login");
   }, [isLoading, isAuthenticated, setLocation]);
 
-// Update visible questions when product-interests changes
+// Update visible questions and apply auto-answers when product-interests changes
 useEffect(() => {
   setSurveyQuestions(getAllQuestions());
+  
+  // Apply auto-answers to ensure consistency
+  const autoAnswers = getAutoSetAnswers(answers);
+  const hasChanges = Object.entries(autoAnswers).some(([key, val]) => {
+    const current = answers[key];
+    return JSON.stringify(current) !== JSON.stringify(val);
+  });
+  
+  if (hasChanges) {
+    setAnswers(prev => ({ ...prev, ...autoAnswers }));
+  }
 }, [answers["product-interests"]]);
 
   // Separate effect for step adjustment to avoid loops
