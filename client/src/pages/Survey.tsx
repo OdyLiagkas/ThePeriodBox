@@ -230,6 +230,8 @@ const menstruatingQuestions: Question[] = [
       { value: "day-protection", label: "During the day when I'm on my period" },
       { value: "extra-protection", label: "I use them as extra protection with tampons" },
       { value: "extra-safety", label: "Just in case, even when off period (e.g. traveling)" },
+      { value: "heavy-days", label: "I use them for my heavy days" },
+      { value: "end-of-cycle", label: "At the end of my cycle" },
     ],
     conditional: (answers) => {
       const interests = answers["product-interests"] as string[] || [];
