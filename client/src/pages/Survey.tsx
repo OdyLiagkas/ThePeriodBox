@@ -57,47 +57,42 @@ const shouldShowGoals = (answers: Record<string, string | string[]>) => {
   return ["no-change", "on-bc", "stopped-bc", "started-bc"].includes(stage);
 };
 
-// Helper to get auto-set answers for hidden questions AND clear answers for visible questions
+const SENTINEL_VALUES = ["no-tampons", "no-pads", "no-liners", "no-pads-or-liners"];
+
 const getAutoSetAnswers = (answers: Record<string, string | string[]>): Record<string, string | string[]> => {
-  const autoAnswers: Record<string, string | string[]> = {};
-  
-  // Parse interests robustly
+  // First: scrub any stale sentinel values from all answer arrays.
+  // These may have been written in a previous render cycle and must not
+  // contaminate the final submission.
+  const cleanedAnswers: Record<string, string | string[]> = {};
+  for (const [key, val] of Object.entries(answers)) {
+    if (Array.isArray(val)) {
+      const scrubbed = val.filter(v => !SENTINEL_VALUES.includes(v));
+      cleanedAnswers[key] = scrubbed;
+    } else {
+      cleanedAnswers[key] = val;
+    }
+  }
+
+  // Parse interests from the cleaned answers
   let interests: string[] = [];
-  const raw = answers["product-interests"];
+  const raw = cleanedAnswers["product-interests"];
   if (Array.isArray(raw)) {
     interests = raw.filter(i => typeof i === "string");
   } else if (typeof raw === "string") {
     interests = raw.split(",").map(s => s.trim()).filter(Boolean);
   }
-  
+
   const hasTampon = interests.includes("tampon-interest");
   const hasPad = interests.includes("pad-interest");
   const hasLiner = interests.includes("liner-interest");
 
-  // Only set no-X flags for products NOT selected.
-  // Never touch keys where the user already has real answers.
+  // Now write sentinel values only for products the user did NOT select
+  if (!hasTampon) cleanedAnswers["tampon-applicator"] = ["no-tampons"];
+  if (!hasPad)    cleanedAnswers["pad-type"]          = ["no-pads"];
+  if (!hasLiner)  cleanedAnswers["liner-type"]        = ["no-liners"];
+  if (!hasPad && !hasLiner) cleanedAnswers["pad-use"] = ["no-pads-or-liners"];
 
-  // Tampon applicator — only auto-set if user didn't select tampons
-  if (!hasTampon) {
-    autoAnswers["tampon-applicator"] = ["no-tampons"];
-  }
-  
-  // Pad type — only auto-set if user didn't select pads
-  if (!hasPad) {
-    autoAnswers["pad-type"] = ["no-pads"];
-  }
-  
-  // Liner type — only auto-set if user didn't select liners
-  if (!hasLiner) {
-    autoAnswers["liner-type"] = ["no-liners"];
-  }
-  
-  // Pad use — only auto-set if user selected neither pads nor liners
-  if (!hasPad && !hasLiner) {
-    autoAnswers["pad-use"] = ["no-pads-or-liners"];
-  }
-  
-  return autoAnswers;
+  return cleanedAnswers;
 };
 
 
@@ -1240,13 +1235,11 @@ const handleAnswer = (value: string | string[]) => {
 const handleNext = () => {
   if (isLastQuestion) {
     setAnswers(prevAnswers => {
-      const autoAnswers = getAutoSetAnswers(prevAnswers);
-      const finalAnswers = { ...prevAnswers, ...autoAnswers };
+      const finalAnswers = getAutoSetAnswers(prevAnswers); // returns full cleaned copy
       submitSurvey.mutate({ answers: finalAnswers });
       return finalAnswers;
     });
   } else {
-    // Do NOT apply auto-answers mid-survey — just advance
     setCurrentStep(currentStep + 1);
   }
 };
