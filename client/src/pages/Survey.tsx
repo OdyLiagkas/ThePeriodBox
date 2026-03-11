@@ -378,26 +378,14 @@ const pregnantQuestions: Question[] = [
   {
     id: "pregnancy-goals",
     question: "What are you hoping The Period Box can help with?",
-    description: "Select all that apply.",
-    type: "multiple",
+    type: "single",
     options: [
       { value: "discharge", label: "Staying comfortable with increased discharge during pregnancy" },
       { value: "postpartum-prep", label: "Finding products that may be helpful after delivery (postpartum bleeding)" },
       { value: "period-return", label: "Preparing for when my period returns after pregnancy" },
       { value: "bladder-leakage", label: "Managing light bladder leakage during pregnancy or postpartum" },
-      { value: "gentle-skin", label: "Finding products that are gentle on sensitive skin" },
-      { value: "absorbency", label: "Needing different absorbency levels during postpartum recovery" },
-    ],
-  },
-  {
-    id: "protection-timing",
-    question: "When do you most need protection?",
-    type: "single",
-    options: [
-      { value: "overnight", label: "Overnight" },
-      { value: "day", label: "During the day at work or home" },
-      { value: "active", label: "While moving or being active" },
-      { value: "resting", label: "At home / resting" },
+      //{ value: "gentle-skin", label: "Finding products that are gentle on sensitive skin" },
+      //{ value: "absorbency", label: "Needing different absorbency levels during postpartum recovery" },
     ],
   },
   {
