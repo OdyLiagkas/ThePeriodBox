@@ -170,7 +170,7 @@ const menstruatingQuestions: Question[] = [
     type: "multiple",
     options: [
       { value: "cotton-only", label: "100% Organic Cotton" },
-      { value: "cotton-blend", label: "Cotton blends (Organic Cotton top sheet/blend)" },
+      { value: "cotton-blend", label: "Cotton blends (organic cotton top sheet/blend)" },
       { value: "alternative", label: "Cotton with alternative fibers (e.g. bamboo, hemp)" },
       { value: "hypoallergenic", label: "Products with hypoallergenic materials" },
       { value: "material-unimportant", label: "All types of materials. Not important to me" },
@@ -185,7 +185,7 @@ const menstruatingQuestions: Question[] = [
     type: "multiple",
     options: [
       { value: "plastic-extended", label: "Plastic fully extended applicator" },
-      { value: "plastic-compact", label: "Plastic compact applicator (Extendable)" },
+      { value: "plastic-compact", label: "Plastic compact applicator (extendable)" },
       { value: "cardboard", label: "Cardboard applicator" },
       { value: "no-applicator", label: "No applicator (digital)" },
     ],
@@ -405,7 +405,7 @@ const pregnantQuestions: Question[] = [
     type: "multiple",
     options: [
       { value: "cotton-only", label: "100% Organic Cotton" },
-      { value: "cotton-blend", label: "Cotton blends (Organic Cotton top sheet/blend)" },
+      { value: "cotton-blend", label: "Cotton blends (organic cotton top sheet/blend)" },
       { value: "alternative", label: "Cotton with alternative fibers (e.g. bamboo, hemp)" },
       { value: "hypoallergenic", label: "Products with hypoallergenic materials" },
       { value: "material-unimportant", label: "All types of materials. Not important to me" },
