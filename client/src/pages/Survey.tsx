@@ -169,7 +169,7 @@ const menstruatingQuestions: Question[] = [
     description: "Check all that apply.",
     type: "multiple",
     options: [
-      { value: "cotton-only", label: "100% Organic Cotton, nothing else" },
+      { value: "cotton-only", label: "100% Organic Cotton" },
       { value: "cotton-blend", label: "Cotton blends (Organic Cotton top sheet/blend)" },
       { value: "alternative", label: "Cotton with alternative fibers (e.g. bamboo, hemp)" },
       { value: "hypoallergenic", label: "Products with hypoallergenic materials" },
@@ -404,7 +404,7 @@ const pregnantQuestions: Question[] = [
     description: "Check all that apply.",
     type: "multiple",
     options: [
-      { value: "cotton-only", label: "100% Organic Cotton, nothing else" },
+      { value: "cotton-only", label: "100% Organic Cotton" },
       { value: "cotton-blend", label: "Cotton blends (Organic Cotton top sheet/blend)" },
       { value: "alternative", label: "Cotton with alternative fibers (e.g. bamboo, hemp)" },
       { value: "hypoallergenic", label: "Products with hypoallergenic materials" },
