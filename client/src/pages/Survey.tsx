@@ -139,11 +139,11 @@ const menstruatingQuestions: Question[] = [
     question: "How would you describe your flow?",
     type: "single",
     options: [
+      { value: "heavy-then-moderate", label: "Heavy the first ~2 days, moderate days 3/4, light last part of period" },
       { value: "light", label: "Light – minimal flow 1-2 days" },
       { value: "moderate", label: "Moderate – regular flow 3-5 days" },
       { value: "heavy", label: "Heavy – significant flow, 4-5+ days" },
       { value: "very-heavy", label: "Very heavy – very significant flow, 5+ days" },
-      { value: "heavy-then-moderate", label: "Heavy the first ~2 days, moderate days 3/4, light last part of period" },
       { value: "varies", label: "Varies – changes month to month" },
     ],
   },
@@ -447,6 +447,17 @@ const postpartumQuestions: Question[] = [
       { value: "6+", label: "More than 6 months" },
     ],
   },
+    {
+    id: "delivery-method",
+    question: "How did you deliver?",
+    type: "single",
+    options: [
+      { value: "vaginal", label: "Vaginal delivery" },
+      { value: "cesarean", label: "Cesarean section" },
+      { value: "assisted", label: "Assisted vaginal delivery (forceps/vacuum)" },
+      { value: "other", label: "Other" },
+    ],
+  },
   {
     id: "postpartum-experience",
     question: "What best describes what you're experiencing right now?",
@@ -471,17 +482,7 @@ const postpartumQuestions: Question[] = [
       { value: "unsure", label: "Unsure / changes often" },
     ],
   },
-  {
-    id: "delivery-method",
-    question: "How did you deliver?",
-    type: "single",
-    options: [
-      { value: "vaginal", label: "Vaginal delivery" },
-      { value: "cesarean", label: "Cesarean section" },
-      { value: "assisted", label: "Assisted vaginal delivery (forceps/vacuum)" },
-      { value: "other", label: "Other" },
-    ],
-  },
+
 //  {
 //    id: "tenderness",
 //    question: "Are you experiencing tenderness or sensitivity?",
@@ -626,10 +627,8 @@ const perimenopausalQuestions: Question[] = [
     question: "Do you experience spotting or unexpected bleeding?",
     type: "single",
     options: [
-      { value: "frequently", label: "Frequently" },
-      { value: "occasionally", label: "Occasionally" },
-      { value: "rarely", label: "Rarely" },
-      { value: "never", label: "Never" },
+      { value: "perimeno-spotting", label: "Yes" },
+      { value: "perimeno-no-spotting", label: "No" },
     ],
   },
   {
