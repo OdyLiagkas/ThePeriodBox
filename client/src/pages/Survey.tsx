@@ -397,12 +397,13 @@ const pregnantQuestions: Question[] = [
   },
     {
     id: "liner-type",
-    question: "Any preference for liners?",
+    question: "Any preference for products?",
     description: "Check all that apply.",
     type: "multiple",
     options: [
       { value: "standard-liner", label: "Standard liners" },
       { value: "thong-liner", label: "Thong liners" },
+      {value: "disposable-underwear", label:"Disposable underwear"}
     ],
     conditional: (answers) => {
       const interests = answers["product-interests"] as string[] || [];
@@ -861,10 +862,13 @@ const getAllQuestions = (): Question[] => {
   ...q,
   conditional: (answers: Record<string, string | string[]>) => {
     // Normal postpartum path (hormonal-stage = postpartum)
-    if (getUserPath(answers) === "postpartum") return true;
+    if (getUserPath(answers) === "postpartum") {
+      // Still apply any question-specific inner conditional (e.g. tampon/pad interest checks)
+      if (q.conditional) return q.conditional(answers);
+      return true;
+    }
     // Pregnant path re-routed via pregnancy-goals = postpartum-prep
     if (getUserPath(answers) === "pregnant" && getPregnantSubPath(answers) === "postpartum") {
-      // Still apply any question-specific inner conditional (e.g. tampon/pad interest checks)
       if (q.conditional) return q.conditional(answers);
       return true;
     }
@@ -887,10 +891,15 @@ const getAllQuestions = (): Question[] => {
     return false;
   }
 })),
-    ...perimenopausalQuestions.map(q => ({
-      ...q,
-      conditional: (answers: Record<string, string | string[]>) => getUserPath(answers) === "perimenopausal"
-    })),
+...perimenopausalQuestions.map(q => ({
+  ...q,
+  conditional: (answers: Record<string, string | string[]>) => {
+    if (getUserPath(answers) !== "perimenopausal") return false;
+    // Apply question-specific inner conditional if it exists
+    if (q.conditional) return q.conditional(answers);
+    return true;
+  }
+})),
     ...menopausalQuestions.map(q => ({
       ...q,
       conditional: (answers: Record<string, string | string[]>) => getUserPath(answers) === "menopausal"
