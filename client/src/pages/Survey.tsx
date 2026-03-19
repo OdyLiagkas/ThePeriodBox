@@ -597,6 +597,20 @@ const postpartumQuestions: Question[] = [
  //   ],
  // },
   {
+    id: "liner-type",
+    question: "Any preference for liners?",
+    description: "Check all that apply.",
+    type: "multiple",
+    options: [
+      { value: "standard-liner", label: "Standard liners" },
+      { value: "thong-liner", label: "Thong liners" },
+    ],
+    conditional: (answers) => {
+      const interests = answers["product-interests"] as string[] || [];
+      return interests.includes("liner-interest");
+    },
+  }, 
+  {
     id: "additional-notes-postpartum",
     question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
     type: "text",
