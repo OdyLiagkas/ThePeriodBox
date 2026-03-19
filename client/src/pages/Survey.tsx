@@ -51,10 +51,19 @@ const getUserPath = (answers: Record<string, string | string[]>) => {
   return null;
 };
 
+// Helper to determine the effective sub-path within the pregnant route,
+// based on the pregnancy-goals answer
+const getPregnantSubPath = (answers: Record<string, string | string[]>) => {
+  const goal = answers["pregnancy-goals"] as string;
+  if (goal === "postpartum-prep") return "postpartum";
+  if (goal === "period-return") return "menstruating";
+  return "pregnant"; // discharge / bladder-leakage stay on the base pregnant path
+};
+
 // Helper to check if user should see the goals question
 const shouldShowGoals = (answers: Record<string, string | string[]>) => {
   const stage = answers["hormonal-stage"] as string;
-  return ["no-change", "on-bc", "stopped-bc", "started-bc"].includes(stage);
+  return ["no-change", "on-bc", "stopped-bc", "started-bc", "perimenopausal"].includes(stage);
 };
 
 const SENTINEL_VALUES = ["no-tampons", "no-pads", "no-liners", "no-pads-or-liners", "no-period"]; // no-period for postpartum when they select NO
@@ -116,7 +125,7 @@ const baseQuestions: Question[] = [
       { value: "switching", label: "Switching products" },
       { value: "organic", label: "Switching to fully organic products" },
     ],
-    conditional: (answers) => shouldShowGoals(answers),
+    conditional: (answers) => shouldShowGoals(answers),            //     IF WE WANT TO MAKE IT ONLY FOR MENSTRUATING ROUTE
   },
 ];
 
@@ -447,18 +456,18 @@ const postpartumQuestions: Question[] = [
       { value: "6+", label: "More than 6 months" },
     ],
   },
-    {
-    id: "postpartum-period",    // IF NO IS SELECTED, SKIP NEXT QUESTION!!!!
-    question: "Have you restarted your period?",
-    type: "single",
-    options: [
-      { value: "postpartum-period-yes", label: "Yes" },
-      { value: "postpartum-period-no", label: "No" },
-    ],
-  },
+//    {
+//    id: "postpartum-period",    // IF NO IS SELECTED, SKIP NEXT QUESTION!!!!
+//    question: "Have you restarted your period?",
+//    type: "single",
+//    options: [
+//      { value: "postpartum-period-yes", label: "Yes" },
+//      { value: "postpartum-period-no", label: "No" },
+//    ],
+//  },
   {
     id: "postpartum-flow",
-    question: "What best describes your period now?",
+    question: "What best describes your current period now?",
     type: "single",
     options: [
       { value: "heavy", label: "Heavy at first, then moderate, ending with light flow " },
@@ -467,11 +476,8 @@ const postpartumQuestions: Question[] = [
       { value: "lochia", label: "Experiencing lochia (vaginal discharge you have after giving birth, contains a mix of blood, mucus and uterine tissue)"},
       { value: "discharge", label: "Heavy significant flow for 4-5+ days " },
       { value: "varies", label: "Very heavy significant flow for 5+ days " },
+      { value: "no-period", label: "None, my period hasn't come back yet" },
     ],
-    conditional: (answers) => {
-      const interests = answers["postpartum-period"] as string[] || [];
-      return interests.includes("postpartum-period-yes");   /// CHECK TO SEE IF IT IS WORKING
-    },
   },
     {    ///// HAVE PRODUCT SPECIFIC QUESTIONS
     id: "product-interests",
@@ -668,7 +674,7 @@ const perimenopausalQuestions: Question[] = [
     ],
   },
   {
-    id: "product-interests-perimeno",
+    id: "product-interests",
     question: "What types of products are you interested in trying?",
     description: "Check all that apply. The survey will change based on selection",
     type: "multiple",
@@ -691,6 +697,73 @@ const perimenopausalQuestions: Question[] = [
       { value: "material-unimportant", label: "All types of materials. Not important to me" },
     ],
   },  
+  {
+    id: "tampon-applicator",
+    question: "What type of tampon applicator would you like to try?",
+    description: "Check all that apply.",
+    type: "multiple",
+    options: [
+      { value: "plastic-extended", label: "Plastic fully extended applicator" },
+      { value: "plastic-compact", label: "Plastic compact applicator (extendable)" },
+      { value: "cardboard", label: "Cardboard applicator" },
+      { value: "no-applicator", label: "No applicator (digital)" },
+    ],
+    conditional: (answers) => {
+      const interests = answers["product-interests"] as string[] || [];
+      return interests.includes("tampon-interest");
+    },
+  },
+
+  {
+    id: "pad-use",
+    question: "What would you be using pads or liners for?",
+    description: "Check all that apply.",
+    type: "multiple",
+    options: [
+      { value: "sleeping-protection", label: "I'm using them when I am sleeping" },
+      { value: "day-protection", label: "During the day when I'm on my period" },
+      { value: "extra-protection", label: "I use them as extra protection with tampons" },
+      { value: "extra-safety", label: "Just in case, even when off period (e.g. traveling)" },
+      { value: "heavy-days", label: "I use them for my heavy days" },
+      { value: "end-of-cycle", label: "At the end of my cycle" },
+    ],
+    conditional: (answers) => {
+      const interests = answers["product-interests"] as string[] || [];
+      return interests.includes("pad-interest") || interests.includes("liner-interest");
+    },
+  },
+
+  {
+    id: "pad-type",
+    question: "What kind of pads would you like to try?",
+    description: "Check all that apply.",
+    type: "multiple",
+    options: [
+      { value: "wingless", label: "Wingless pads" },
+      { value: "single-wings", label: "Pads with single wings" },
+      { value: "double-wings", label: "Pads with double wings (recommended for heavy flow)" },
+      { value: "rear-coverage", label: "Pads with extra rear coverage (recommended for heavy flow)" },
+    ],
+    conditional: (answers) => {
+      const interests = answers["product-interests"] as string[] || [];
+      return interests.includes("pad-interest");
+    },
+  },
+
+  {
+    id: "liner-type",
+    question: "Any preference for liners?",
+    description: "Check all that apply.",
+    type: "multiple",
+    options: [
+      { value: "standard-liner", label: "Standard liners" },
+      { value: "thong-liner", label: "Thong liners" },
+    ],
+    conditional: (answers) => {
+      const interests = answers["product-interests"] as string[] || [];
+      return interests.includes("liner-interest");
+    },
+  },
   {
     id: "additional-notes-peri",
     question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
@@ -771,28 +844,49 @@ const menopausalQuestions: Question[] = [
 const getAllQuestions = (): Question[] => {
   return [
     ...baseQuestions,
-    ...menstruatingQuestions.map(q => ({
-      ...q,
-      conditional: (answers: Record<string, string | string[]>) => {
-        // First check if we're on the menstruating path
-        if (getUserPath(answers) !== "menstruating") return false;
-        
-        // Then apply question-specific conditional if it exists
-        if (q.conditional) {
-          return q.conditional(answers);
-        }
-        
-        return true;
-      }
-    })),
-    ...pregnantQuestions.map(q => ({
-      ...q,
-      conditional: (answers: Record<string, string | string[]>) => getUserPath(answers) === "pregnant"
-    })),
-    ...postpartumQuestions.map(q => ({
-      ...q,
-      conditional: (answers: Record<string, string | string[]>) => getUserPath(answers) === "postpartum"
-    })),
+...pregnantQuestions.map(q => ({
+  ...q,
+  conditional: (answers: Record<string, string | string[]>) => {
+    if (getUserPath(answers) !== "pregnant") return false;
+    // trimester and pregnancy-goals always show on the pregnant path
+    if (q.id === "trimester" || q.id === "pregnancy-goals") return true;
+    // After goals is answered, only show remaining pregnant-specific Qs
+    // if the sub-path hasn't been redirected to postpartum or menstruating
+    const goal = answers["pregnancy-goals"] as string;
+    if (!goal) return false;
+    return getPregnantSubPath(answers) === "pregnant";
+  }
+})),
+...postpartumQuestions.map(q => ({
+  ...q,
+  conditional: (answers: Record<string, string | string[]>) => {
+    // Normal postpartum path (hormonal-stage = postpartum)
+    if (getUserPath(answers) === "postpartum") return true;
+    // Pregnant path re-routed via pregnancy-goals = postpartum-prep
+    if (getUserPath(answers) === "pregnant" && getPregnantSubPath(answers) === "postpartum") {
+      // Still apply any question-specific inner conditional (e.g. tampon/pad interest checks)
+      if (q.conditional) return q.conditional(answers);
+      return true;
+    }
+    return false;
+  }
+})),
+...menstruatingQuestions.map(q => ({
+  ...q,
+  conditional: (answers: Record<string, string | string[]>) => {
+    // Normal menstruating path (hormonal-stage = no-change / on-bc / etc.)
+    if (getUserPath(answers) === "menstruating") {
+      if (q.conditional) return q.conditional(answers);
+      return true;
+    }
+    // Pregnant path re-routed via pregnancy-goals = period-return
+    if (getUserPath(answers) === "pregnant" && getPregnantSubPath(answers) === "menstruating") {
+      if (q.conditional) return q.conditional(answers);
+      return true;
+    }
+    return false;
+  }
+})),
     ...perimenopausalQuestions.map(q => ({
       ...q,
       conditional: (answers: Record<string, string | string[]>) => getUserPath(answers) === "perimenopausal"
