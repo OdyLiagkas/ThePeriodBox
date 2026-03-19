@@ -34,8 +34,8 @@ const hormonalStageOptions = [
   { value: "stopped-bc", label: "Recently stopped hormonal birth control" },
   { value: "started-bc", label: "Recently started hormonal birth control" },
   { value: "pregnant", label: "Currently pregnant" },
-  { value: "postpartum", label: "Postpartum or recently gave birth" },
-  { value: "perimenopausal", label: "Perimenopausal" },
+  { value: "postpartum", label: "Postpartum or recently gave birth" }, // for mapping lifestyle = 3
+  { value: "perimenopausal", label: "Perimenopausal" }, // for mapping absorbency = 10
   { value: "menopausal", label: "Menopausal" },
 ];
 
@@ -57,7 +57,7 @@ const shouldShowGoals = (answers: Record<string, string | string[]>) => {
   return ["no-change", "on-bc", "stopped-bc", "started-bc"].includes(stage);
 };
 
-const SENTINEL_VALUES = ["no-tampons", "no-pads", "no-liners", "no-pads-or-liners"];
+const SENTINEL_VALUES = ["no-tampons", "no-pads", "no-liners", "no-pads-or-liners", "no-period"]; // no-period for postpartum when they select NO
 
 const getAutoSetAnswers = (answers: Record<string, string | string[]>): Record<string, string | string[]> => {
   // First: scrub any stale sentinel values from all answer arrays.
@@ -114,7 +114,7 @@ const baseQuestions: Question[] = [
       { value: "better-product", label: "Finding a product that works better for my body" },
       { value: "new-type", label: "Introducing an additional product" },
       { value: "switching", label: "Switching products" },
-      { value: "organic", label: "Switch to fully organic products" },
+      { value: "organic", label: "Switching to fully organic products" },
     ],
     conditional: (answers) => shouldShowGoals(answers),
   },
@@ -381,25 +381,27 @@ const pregnantQuestions: Question[] = [
     type: "single",
     options: [
       { value: "discharge", label: "Staying comfortable with increased discharge during pregnancy" },
-      { value: "postpartum-prep", label: "Finding products that may be helpful after delivery (postpartum bleeding)" },
-      { value: "period-return", label: "Preparing for when my period returns after pregnancy" },
+      { value: "postpartum-prep", label: "Finding products that may be helpful after delivery (postpartum bleeding)" }, // switch the next questions to be the postpartum specific questions (for mapping add lifestyle 3)
+      { value: "period-return", label: "Preparing for when my period returns after pregnancy" }, // switch the next questions with the no hormonal change specific questions
       { value: "bladder-leakage", label: "Managing light bladder leakage during pregnancy or postpartum" },
-      //{ value: "gentle-skin", label: "Finding products that are gentle on sensitive skin" },
-      //{ value: "absorbency", label: "Needing different absorbency levels during postpartum recovery" },
     ],
   },
-  {
-    id: "organic-preference-pregnant",
-    question: "Do you prefer organic / natural materials?",
-    type: "single",
+    {
+    id: "liner-type",
+    question: "Any preference for liners?",
+    description: "Check all that apply.",
+    type: "multiple",
     options: [
-      { value: "always", label: "Yes, always" },
-      { value: "sometimes", label: "Sometimes / open to trying" },
-      { value: "not-important", label: "Not important to me" },
+      { value: "standard-liner", label: "Standard liners" },
+      { value: "thong-liner", label: "Thong liners" },
     ],
+    conditional: (answers) => {
+      const interests = answers["product-interests"] as string[] || [];
+      return interests.includes("liner-interest");
+    },
   },
   {
-    id: "material-preferences-pregnant",
+    id: "pregnant-organic-preference",
     question: "What materials would you like to try?",
     description: "Check all that apply.",
     type: "multiple",
@@ -440,47 +442,76 @@ const postpartumQuestions: Question[] = [
     question: "How far postpartum are you?",
     type: "single",
     options: [
-      { value: "0-2", label: "0 - 2 weeks" },
-      { value: "2-6", label: "2 - 6 weeks" },
-      { value: "6-12", label: "6 - 12 weeks" },
+      { value: "0-2", label: "0 - 2 months" },
       { value: "3-6", label: "3 - 6 months" },
       { value: "6+", label: "More than 6 months" },
     ],
   },
     {
-    id: "delivery-method",
-    question: "How did you deliver?",
+    id: "postpartum-period",    // IF NO IS SELECTED, SKIP NEXT QUESTION!!!!
+    question: "Have you restarted your period?",
     type: "single",
     options: [
-      { value: "vaginal", label: "Vaginal delivery" },
-      { value: "cesarean", label: "Cesarean section" },
-      { value: "assisted", label: "Assisted vaginal delivery (forceps/vacuum)" },
-      { value: "other", label: "Other" },
+      { value: "postpartum-period-yes", label: "Yes" },
+      { value: "postpartum-period-no", label: "No" },
     ],
   },
   {
-    id: "postpartum-experience",
-    question: "What best describes what you're experiencing right now?",
+    id: "postpartum-flow",
+    question: "What best describes your period now?",
     type: "single",
     options: [
-      { value: "heavy", label: "Heavy bleeding (changing frequently)" },
-      { value: "moderate", label: "Moderate bleeding" },
+      { value: "heavy", label: "Heavy at first, then moderate, ending with light flow " },
+      { value: "moderate", label: "Moderate regular flow for 3-5 days " },
       { value: "light", label: "Light bleeding or spotting" },
-      { value: "discharge", label: "Mostly discharge, little to no bleeding" },
-      { value: "varies", label: "It varies day to day" },
+      { value: "lochia", label: "Experiencing lochia (vaginal discharge you have after giving birth, contains a mix of blood, mucus and uterine tissue)"},
+      { value: "discharge", label: "Heavy significant flow for 4-5+ days " },
+      { value: "varies", label: "Very heavy significant flow for 5+ days " },
+    ],
+    conditional: (answers) => {
+      const interests = answers["postpartum-period"] as string[] || [];
+      return interests.includes("postpartum-period-yes");   /// CHECK TO SEE IF IT IS WORKING
+    },
+  },
+    {    ///// HAVE PRODUCT SPECIFIC QUESTIONS
+    id: "product-interests",
+    question: "What types of products are you interested in trying?",
+    description: "Check all that apply. The survey will change based on selection",
+    type: "multiple",
+    options: [
+      { value: "tampon-interest", label: "Tampons" },
+      { value: "pad-interest", label: "Pads" },
+      { value: "liner-interest", label: "Liners" },
     ],
   },
   {
-    id: "bleeding-appearance",
-    question: "What does your bleeding or discharge look like most of the time?",
-    type: "single",
+    id: "postpartum-organic-preference",
+    question: "What materials would you like to try?",
+    description: "Check all that apply.",
+    type: "multiple",
     options: [
-      { value: "bright-red", label: "Bright red" },
-      { value: "dark-red", label: "Dark red or brown" },
-      { value: "pink", label: "Pink" },
-      { value: "yellow-white", label: "Yellow or white" },
-      { value: "unsure", label: "Unsure / changes often" },
+      { value: "cotton-only", label: "100% Organic Cotton" },
+      { value: "cotton-blend", label: "Cotton blends (organic cotton top sheet/blend)" },
+      { value: "alternative", label: "Cotton with alternative fibers (e.g. bamboo, hemp)" },
+      { value: "hypoallergenic", label: "Products with hypoallergenic materials" },
+      { value: "material-unimportant", label: "All types of materials. Not important to me" },
     ],
+  },
+    {
+    id: "tampon-applicator",
+    question: "What type of tampon applicator would you like to try?",
+    description: "Check all that apply.",
+    type: "multiple",
+    options: [
+      { value: "plastic-extended", label: "Plastic fully extended applicator" },
+      { value: "plastic-compact", label: "Plastic compact applicator (extendable)" },
+      { value: "cardboard", label: "Cardboard applicator" },
+      { value: "no-applicator", label: "No applicator (digital)" },
+    ],
+    conditional: (answers) => {
+      const interests = answers["product-interests"] as string[] || [];
+      return interests.includes("tampon-interest");
+    },
   },
 
 //  {
@@ -496,47 +527,53 @@ const postpartumQuestions: Question[] = [
 //    ],
 //  },
   {
-    id: "bladder-leakage-postpartum",
-    question: "Are you experiencing bladder leakage?",
-    type: "single",
-    options: [
-      { value: "frequently", label: "Yes, frequently" },
-      { value: "occasionally", label: "Yes, occasionally" },
-      { value: "no", label: "No" },
-    ],
-  },
-  {
-    id: "organic-preference-postpartum",
-    question: "Do you prefer organic / natural materials?",
-    type: "single",
-    options: [
-      { value: "always", label: "Yes, always" },
-      { value: "sometimes", label: "Sometimes / open to trying" },
-      { value: "not-important", label: "Not important to me" },
-    ],
-  },
-  {
-    id: "sensitivities-postpartum",
-    question: "Do you have any sensitivities?",
-    description: "Select all that apply. We'll filter out products that may not work for you.",
+    id: "postpartum-experience",
+    question: "Are you currently experiencing any of the following?",
+    description: "Check all that apply.",
     type: "multiple",
     options: [
-      { value: "fragrance", label: "Fragrance sensitivity" },
-      { value: "latex", label: "Latex allergy" },
-      { value: "hypoallergenic", label: "Prefer hypoallergenic materials" },
-      { value: "none", label: "No known sensitivities" },
+      { value: "increased-discharge", label: "Increased discharge" },
+      { value: "incontinence-leakage", label: "Incontinence or bladder leakage" },
+      { value: "perineal-sensitivity", label: "Perineal sensitivity or stitches" },
+      { value: "vaginal-dryness", label: "I am currently breastfeeding causing increased vaginal dryness" },
+      { value: "none", label: "None" },
     ],
   },
-  {
-    id: "protection-timing-postpartum",
-    question: "When do you most need protection?",
-    type: "single",
+  {   ////// PAD OR LINER SPECIFIC
+    id: "pad-use",
+    question: "What would you be using pads or liners for?",
+    description: "Check all that apply.",
+    type: "multiple",
     options: [
-      { value: "overnight", label: "Overnight" },
-      { value: "day", label: "During the day at work or home" },
-      { value: "active", label: "While moving or being active" },
-      { value: "resting", label: "At home / resting" },
+      { value: "lochia", label: "For lochia, I haven’t restarted my period yet" },
+      { value: "bladder-leakage", label: "In case of bladder leakage" },
+      { value: "during-sleep", label: "I'm using them when I am sleeping" },
+      { value: "day-on-period", label: "During the day when I'm on my period" },
+      { value: "extra-protection", label: "I use them as extra protection with tampons" },
+      { value: "extra-safety", label: "Just in case, even when off period (e.g. traveling)" },
+      { value: "heavy-days", label: "I use them for my heavy days" },
+      { value: "end-of-cycle", label: "At the end of my cycle" },
     ],
+    conditional: (answers) => {
+      const interests = answers["product-interests"] as string[] || [];
+      return interests.includes("pad-interest") || interests.includes("liner-interest");
+    },
+  },
+  {
+    id: "pad-type",
+    question: "What kind of pads would you like to try?",
+    description: "Check all that apply.",
+    type: "multiple",
+    options: [
+      { value: "wingless", label: "Wingless pads" },
+      { value: "single-wings", label: "Pads with single wings" },
+      { value: "double-wings", label: "Pads with double wings (recommended for heavy flow)" },
+      { value: "rear-coverage", label: "Pads with extra rear coverage (recommended for heavy flow)" },
+    ],
+    conditional: (answers) => {
+      const interests = answers["product-interests"] as string[] || [];
+      return interests.includes("pad-interest");
+    },
   },
  // {
  //   id: "most-important-postpartum",
@@ -597,31 +634,30 @@ const perimenopausalQuestions: Question[] = [
     ],
   },
   {
-    id: "flow-changes",
-    question: "How has your flow changed recently?",
-    description: "Select all that apply.",
-    type: "multiple",
+    id: "perimeno-flow",
+    question: "What best describes your period now?",
+    type: "single",
     options: [
-      { value: "heavier", label: "Heavier than before" },
-      { value: "lighter", label: "Lighter than before" },
-      { value: "longer", label: "Longer periods" },
-      { value: "shorter", label: "Shorter periods" },
-      { value: "spotting", label: "Spotting between periods" },
-      { value: "varies", label: "It varies month to month" },
+      { value: "heavy", label: "Heavy at first, then moderate, ending with light flow " },
+      { value: "moderate", label: "Moderate regular flow for 3-5 days " },
+      { value: "light", label: "Light bleeding or spotting" },
+      { value: "lochia", label: "Experiencing lochia (vaginal discharge you have after giving birth, contains a mix of blood, mucus and uterine tissue)"},
+      { value: "discharge", label: "Heavy significant flow for 4-5+ days " },
+      { value: "varies", label: "Very heavy significant flow for 5+ days " },
     ],
   },
-  {
-    id: "peri-symptoms",
-    question: "Do you experience any of the following?",
-    description: "Select all that apply.",
-    type: "multiple",
-    options: [
-      { value: "gushes", label: "Sudden heavy \"gushes\"" },
-      { value: "clots", label: "Blood clots" },
-      { value: "flooding", label: "Flooding or overflow" },
-      { value: "none", label: "None of the above" },
-    ],
-  },
+//  {
+//    id: "peri-symptoms",
+//    question: "Do you experience any of the following?",
+//    description: "Select all that apply.",
+//    type: "multiple",
+//    options: [
+//      { value: "gushes", label: "Sudden heavy \"gushes\"" },
+//      { value: "clots", label: "Blood clots" },
+//      { value: "flooding", label: "Flooding or overflow" },
+//      { value: "none", label: "None of the above" },
+//    ],
+//  },
   {
     id: "spotting-frequency",
     question: "Do you experience spotting or unexpected bleeding?",
@@ -632,38 +668,29 @@ const perimenopausalQuestions: Question[] = [
     ],
   },
   {
-    id: "leak-worry",
-    question: "Do you worry about leaks overnight or during long stretches?",
-    type: "single",
-    options: [
-      { value: "often", label: "Yes, often" },
-      { value: "sometimes", label: "Sometimes" },
-      { value: "rarely", label: "Rarely" },
-    ],
-  },
-  {
-    id: "internal-products",
-    question: "How do you feel about intravaginal products (tampons, cups etc.) right now?",
-    type: "single",
-    options: [
-      { value: "prefer", label: "I prefer them" },
-      { value: "occasionally", label: "I use them occasionally" },
-      { value: "avoid", label: "I avoid them now" },
-      { value: "stopped", label: "I've stopped using them entirely" },
-    ],
-  },
-  {
-    id: "discomfort-timing",
-    question: "When do leaks or discomfort bother you most?",
-    description: "Select all that apply.",
+    id: "product-interests-perimeno",
+    question: "What types of products are you interested in trying?",
+    description: "Check all that apply. The survey will change based on selection",
     type: "multiple",
     options: [
-      { value: "overnight", label: "Overnight" },
-      { value: "exercise", label: "During exercise or movement" },
-      { value: "day", label: "During the day" },
-      { value: "traveling", label: "While traveling" },
+      { value: "tampon-interest", label: "Tampons" },
+      { value: "pad-interest", label: "Pads" },
+      { value: "liner-interest", label: "Liners" },
     ],
   },
+  {
+    id: "perimeno-organic-preference",
+    question: "What materials would you like to try?",
+    description: "Check all that apply.",
+    type: "multiple",
+    options: [
+      { value: "cotton-only", label: "100% Organic Cotton" },
+      { value: "cotton-blend", label: "Cotton blends (organic cotton top sheet/blend)" },
+      { value: "alternative", label: "Cotton with alternative fibers (e.g. bamboo, hemp)" },
+      { value: "hypoallergenic", label: "Products with hypoallergenic materials" },
+      { value: "material-unimportant", label: "All types of materials. Not important to me" },
+    ],
+  },  
   {
     id: "additional-notes-peri",
     question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
@@ -697,25 +724,29 @@ const menopausalQuestions: Question[] = [
     ],
   },
   {
-    id: "daily-protection",
-    question: "Do you use protection for daily moisture or discharge?",
-    type: "single",
+    id: "bladder-leakage-meno",
+    question: "What type of products would you like to try for bladder leakage?",
+    description: "Check all that apply.",
+    type: "multiple",
     options: [
-      { value: "daily", label: "Yes, daily" },
-      { value: "occasionally", label: "Occasionally" },
-      { value: "no", label: "No" },
+      { value: "pads", label: "Pads" },
+      { value: "liners", label: "Liners" },
+      { value: "diapers", label: "Diapers" },
     ],
   },
   {
-    id: "bladder-leakage-meno",
-    question: "Are you experiencing bladder leakage?",
-    type: "single",
+    id: "meno-organic-preference",
+    question: "What materials would you like to try?",
+    description: "Check all that apply.",
+    type: "multiple",
     options: [
-      { value: "frequently", label: "Yes, frequently" },
-      { value: "occasionally", label: "Yes, occasionally" },
-      { value: "no", label: "No" },
+      { value: "cotton-only", label: "100% Organic Cotton" },
+      { value: "cotton-blend", label: "Cotton blends (organic cotton top sheet/blend)" },
+      { value: "alternative", label: "Cotton with alternative fibers (e.g. bamboo, hemp)" },
+      { value: "hypoallergenic", label: "Products with hypoallergenic materials" },
+      { value: "material-unimportant", label: "All types of materials. Not important to me" },
     ],
-  },
+  },  
   {
     id: "discomfort-timing-meno",
     question: "When do leaks or discomfort bother you most?",
