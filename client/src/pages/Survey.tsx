@@ -1580,7 +1580,7 @@ const saveNotificationPreference = useMutation({
                   data-testid="button-purchase-kit"
                   onClick={handleGetSampleKit}
                 >
-                  Get Your Sample Kit
+                  Go to your Period Box
                 </Button>
               </div>
             </CardContent>
