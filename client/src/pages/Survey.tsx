@@ -1424,7 +1424,7 @@ const handleNext = () => {
     if (!isAuthenticated) {
       toast({
         title: "Account Required",
-        description: "Please log in or create an account to get your sample kit.",
+        description: "Please log in or create an account to get your personalized Period Box.",
       });
       setTimeout(() => {
         window.location.href = "/login";
@@ -1550,7 +1550,7 @@ const saveNotificationPreference = useMutation({
             <CardContent className="p-8 space-y-4">
               <div className="text-center space-y-3">
                 <h2 className="text-2xl md:text-3xl font-bold font-heading bg-gradient-to-r from-primary to-chart-2 bg-clip-text text-transparent">
-                  Try The Period Box Sample Kit
+                  Go to The Period Box
                 </h2>
                 <p className="text-muted-foreground">
                   Get a curated selection of the brands that fit you best. Try before you commit to full-size products!
