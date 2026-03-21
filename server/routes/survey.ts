@@ -56,13 +56,17 @@ router.get("/notify-when-ready/status", async (req, res) => {
 
   try {
     const result = await client.query(
-      `SELECT id FROM people_to_notify 
-       WHERE user_id = $1 AND notified = FALSE
+      `SELECT id, notified FROM people_to_notify 
+       WHERE user_id = $1
        LIMIT 1`,
       [user.id]
     );
 
-    res.json({ subscribed: result.rows.length > 0 });
+    const row = result.rows[0];
+    res.json({
+      subscribed: !!row,
+      notified: row ? row.notified === true : false,
+    });
   } catch (err: any) {
     console.error("Status check error:", err);
     res.status(500).json({ message: "Failed to check status" });
