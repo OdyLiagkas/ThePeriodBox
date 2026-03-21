@@ -495,8 +495,15 @@ function NotificationPreference({ onGoToSurvey }: NotificationPreferenceProps) {
 /* ----------  PAGE  ---------- */
 export default function Account() {
   const { user, isLoading, isAuthenticated, logout } = useAuth();
-  const [, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState<TabValue>('box');
+const [, setLocation] = useLocation();
+const [activeTab, setActiveTab] = useState<TabValue>(() => {
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get('tab');
+  if (tab === 'orders' || tab === 'history' || tab === 'survey' || tab === 'box') {
+    return tab as TabValue;
+  }
+  return 'box';
+});
   const { toast } = useToast();
 
   // Use the survey hook
