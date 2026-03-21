@@ -336,7 +336,7 @@ function NotificationPreference({ onGoToSurvey }: NotificationPreferenceProps) {
   const [, setLocation] = useLocation();
 
   // SHOPIFY_URL: to be replaced with real Shopify product URL when ready
-  const SHOPIFY_PRODUCT_URL = "https://your-store.myshopify.com/products/your-product";
+  const SHOPIFY_PRODUCT_URL = "https://yourperiodbox.myshopify.com/products/period-box";
 
   const { data: statusData, isLoading: checkingStatus } = useQuery({
     queryKey: ['notification-status'],
