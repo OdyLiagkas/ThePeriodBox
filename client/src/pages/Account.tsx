@@ -367,7 +367,7 @@ function NotificationPreference({ onGoToSurvey }: NotificationPreferenceProps) {
     onSuccess: () => {
       toast({
         title: "Preference saved",
-        description: "We'll notify you when your sample box is ready!",
+        description: "We'll notify you when your period box is ready!",
       });
     },
     onError: (error: any) => {
@@ -394,10 +394,10 @@ function NotificationPreference({ onGoToSurvey }: NotificationPreferenceProps) {
           {isNotified ? (
             <>
               <h2 className="text-2xl md:text-3xl font-bold font-heading">
-                Your sample box is ready! 🎉
+                Your period box is ready! 🎉
               </h2>
               <p className="text-muted-foreground text-lg">
-                Click below to purchase your personalized period care box
+                Click below to purchase your personalized period box
               </p>
             </>
           ) : (
