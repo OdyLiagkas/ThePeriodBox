@@ -849,11 +849,11 @@ const [activeTab, setActiveTab] = useState<TabValue>(() => {
             <div className="min-h-[600px]">
               {renderContent()}
             </div>
-            <div className="fixed bottom-6 right-[5px] z-50">
+
+          </div>
+            <div className="flex justify-end mt-6 pr-[5px]">
               <DeleteAccountButton onDelete={() => deleteAccount.mutate()} />
             </div>
-          </div>
-        
         </div>
       </main>
       
