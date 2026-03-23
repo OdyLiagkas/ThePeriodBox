@@ -134,7 +134,7 @@ function DeleteAccountButton({ onDelete }: DeleteAccountButtonProps) {
   }
 
   return (
-    <div className="fixed bottom-24 right-4 md:right-8 z-50">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-200">
       <Button
         variant="outline"
         size="sm"
@@ -796,7 +796,7 @@ const [activeTab, setActiveTab] = useState<TabValue>(() => {
           </div>
 
           {/* Main Layout */}
-          <div className="grid lg:grid-cols-[280px_1fr] gap-8">
+          <div className="relative grid lg:grid-cols-[280px_1fr] gap-8">
             {/* Sidebar Navigation */}
             <aside className="space-y-2">
               <Card className="p-2 sticky top-24 bg-white/80 backdrop-blur-sm border-primary/10">
