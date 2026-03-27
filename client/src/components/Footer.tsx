@@ -48,7 +48,7 @@ export function Footer() {
                 <Instagram className="h-5 w-5" />
               </a>
               <a
-    href="https://www.tiktok.com/@the_period_box_"        
+    href="https://www.tiktok.com/@the_period_box"        
     target="_blank"
     rel="noopener noreferrer"
     className="p-2 hover-elevate active-elevate-2 rounded-md"
