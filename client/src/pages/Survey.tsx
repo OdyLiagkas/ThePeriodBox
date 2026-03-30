@@ -471,12 +471,12 @@ const postpartumQuestions: Question[] = [
     question: "What best describes your current period now?",
     type: "single",
     options: [
-      { value: "heavy", label: "Heavy at first, then moderate, ending with light flow " },
-      { value: "moderate", label: "Moderate regular flow for 3-5 days " },
+      { value: "heavy-then-moderate", label: "Heavy at first, then moderate, ending with light flow" },
+      { value: "heavy", label: "Heavy significant flow for 4-5+ days" },
+      { value: "moderate", label: "Moderate regular flow for 3-5 days" },
       { value: "light", label: "Light bleeding or spotting" },
-      { value: "lochia", label: "Experiencing lochia (vaginal discharge you have after giving birth, contains a mix of blood, mucus and uterine tissue)"},
-      { value: "discharge", label: "Heavy significant flow for 4-5+ days " },
-      { value: "varies", label: "Very heavy significant flow for 5+ days " },
+      { value: "lochia", label: "Experiencing lochia (heavy vaginal discharge you have after giving birth, contains a mix of blood, mucus and uterine tissue)"},
+      { value: "discharge", label: "Moderate vaginal discharge" },
       { value: "no-period", label: "None, my period hasn't come back yet" },
     ],
   },
@@ -819,7 +819,7 @@ const menopausalQuestions: Question[] = [
     options: [
       { value: "pad-interest", label: "Pads" },
       { value: "liner-interest", label: "Liners" },
-      { value: "diapers", label: "Diapers" },
+      { value: "disposable-underwear", label: "Disposable underwear" },
     ],
   },
   {
@@ -842,7 +842,7 @@ const menopausalQuestions: Question[] = [
     type: "multiple",
     options: [
       { value: "overnight", label: "Overnight" },
-      { value: "exercise", label: "During exercise or movement" },
+      //{ value: "exercise", label: "During exercise or movement" },
       { value: "day", label: "During the day" },
       { value: "traveling", label: "While traveling" },
     ],
@@ -877,12 +877,13 @@ const getAllQuestions = (): Question[] => {
   conditional: (answers: Record<string, string | string[]>) => {
     // Normal postpartum path (hormonal-stage = postpartum)
     if (getUserPath(answers) === "postpartum") {
-      // Still apply any question-specific inner conditional (e.g. tampon/pad interest checks)
       if (q.conditional) return q.conditional(answers);
       return true;
     }
     // Pregnant path re-routed via pregnancy-goals = postpartum-prep
     if (getUserPath(answers) === "pregnant" && getPregnantSubPath(answers) === "postpartum") {
+      // Skip these two questions when coming from the pregnancy route
+      if (q.id === "postpartum-timeline" || q.id === "postpartum-flow") return false;
       if (q.conditional) return q.conditional(answers);
       return true;
     }
