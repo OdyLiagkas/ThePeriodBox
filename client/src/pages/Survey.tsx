@@ -836,15 +836,14 @@ const menopausalQuestions: Question[] = [
     ],
   },  
   {
-    id: "discomfort-timing-meno",
-    question: "When do leaks or discomfort bother you most?",
-    description: "Select all that apply.",
-    type: "multiple",
+    id: "bladder-protection",
+    question: "What level of bladder protection are you looking for?",
+    description: "Check all that apply.",
+    type: "multiple", 
     options: [
-      { value: "overnight", label: "Overnight" },
-      //{ value: "exercise", label: "During exercise or movement" },
-      { value: "day", label: "During the day" },
-      { value: "traveling", label: "While traveling" },
+      { value: "light-protection", label: "Light protection, mostly for daily use"}, 
+      { value: "medium-protection", label: "Medium Protection" }, 
+      { value: "significant-protection", label: "Significant protection" },
     ],
   },
   {
