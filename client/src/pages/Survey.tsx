@@ -85,8 +85,14 @@ if (isDirectLinearPath) {
   cleanedAnswers["tampon-applicator"] = ["no-tampons"];
   cleanedAnswers["pad-type"] = ["no-pads"];
   cleanedAnswers["pad-use"] = ["no-pads-or-liners"];
-  cleanedAnswers["liner-type"] = ["no-liners"]; // not used on this path
-  // pregnant-liner-type is preserved as-is
+  cleanedAnswers["liner-type"] = ["no-liners"];
+  
+  // Normalize bladder-leakage liner answer into the standard pregnant-liner-type key
+  if (cleanedAnswers["pregnant-liner-type-discharge"]) {
+    cleanedAnswers["pregnant-liner-type"] = cleanedAnswers["pregnant-liner-type-discharge"];
+    delete cleanedAnswers["pregnant-liner-type-discharge"];
+  }
+  
   return cleanedAnswers;
 }
 
@@ -397,31 +403,45 @@ const pregnantQuestions: Question[] = [
     question: "What are you hoping The Period Box can help with?",
     type: "single",
     options: [
-      { value: "discharge", label: "Staying comfortable with increased discharge during pregnancy" },
+      { value: "discharge", label: "Staying comfortable with discharge during pregnancy" }, // used to be 'increased discharge'
       { value: "postpartum-prep", label: "Finding products that may be helpful after delivery (postpartum bleeding)" }, // switch the next questions to be the postpartum specific questions (for mapping add lifestyle 3)
       { value: "period-return", label: "Preparing for when my period returns after pregnancy" }, // switch the next questions with the no hormonal change specific questions
-      { value: "bladder-leakage", label: "Managing light bladder leakage during pregnancy or postpartum" },
+      { value: "bladder-leakage", label: "Managing bladder leakage during pregnancy or postpartum" }, // used to be 'light leakage'
     ],
   },
-    {
-    id: "pregnant-liner-type",
-    question: "Any preference for products?",
-    description: "Check all that apply.",
-    type: "multiple",
-    options: [
-      { value: "standard-liner", label: "Standard liners" },
-      { value: "thong-liner", label: "Thong liners" },
-      {value: "disposable-underwear", label:"Disposable underwear"}
-    ],
+{
+  id: "pregnant-liner-type-discharge",
+  question: "Any preference for products?",
+  description: "Check all that apply.",
+  type: "multiple",
+  options: [
+    { value: "standard-liner", label: "Standard liners" },
+    { value: "thong-liner", label: "Thong liners" },
+    { value: "disposable-underwear", label: "Disposable underwear" },
+  ],
   conditional: (answers) => {
     const goal = answers["pregnancy-goals"] as string;
-    // Always show on discharge/bladder-leakage goals; on other sub-paths,
-    // defer to product-interests like the other routes do
-    if (goal === "discharge" || goal === "bladder-leakage") return true;
-    const interests = answers["product-interests"] as string[] || [];
-    return interests.includes("liner-interest");
-    },
+    return goal === "discharge";
   },
+},
+// bladder leakage version
+{
+  id: "pregnant-liner-type",
+  question: "Any preference for products?",
+  description: "Check all that apply.",
+  type: "multiple",
+  options: [
+    { value: "extra-protection-liner", label: "Extra protection liners" },
+    { value: "pads", label: "Pads" },
+    { value: "standard-liner", label: "Standard liners" },
+    { value: "thong-liner", label: "Thong liners" },
+    { value: "disposable-underwear", label: "Disposable underwear" },
+  ],
+  conditional: (answers) => {
+    const goal = answers["pregnancy-goals"] as string;
+    return goal === "bladder-leakage";
+  },
+},
   {
     id: "pregnant-organic-preference",
     question: "What materials would you like to try?",
@@ -874,13 +894,12 @@ const getAllQuestions = (): Question[] => {
   ...q,
   conditional: (answers: Record<string, string | string[]>) => {
     if (getUserPath(answers) !== "pregnant") return false;
-    // trimester and pregnancy-goals always show on the pregnant path
     if (q.id === "trimester" || q.id === "pregnancy-goals") return true;
-    // After goals is answered, only show remaining pregnant-specific Qs
-    // if the sub-path hasn't been redirected to postpartum or menstruating
     const goal = answers["pregnancy-goals"] as string;
     if (!goal) return false;
-    return getPregnantSubPath(answers) === "pregnant";
+    if (getPregnantSubPath(answers) !== "pregnant") return false;
+    if (q.conditional) return q.conditional(answers);
+    return true;
   }
 })),
 ...postpartumQuestions.map(q => ({
