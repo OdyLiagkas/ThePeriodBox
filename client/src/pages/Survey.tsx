@@ -69,17 +69,25 @@ const shouldShowGoals = (answers: Record<string, string | string[]>) => {
 const SENTINEL_VALUES = ["no-tampons", "no-pads", "no-liners", "no-pads-or-liners", "no-period"]; // no-period for postpartum when they select NO
 
 const getAutoSetAnswers = (answers: Record<string, string | string[]>): Record<string, string | string[]> => {
-  // First: scrub any stale sentinel values from all answer arrays.
-  // These may have been written in a previous render cycle and must not
-  // contaminate the final submission.
+  const goal = answers["pregnancy-goals"] as string;
+  const isDirectLinearPath = goal === "discharge" || goal === "bladder-leakage";
+
   const cleanedAnswers: Record<string, string | string[]> = {};
   for (const [key, val] of Object.entries(answers)) {
     if (Array.isArray(val)) {
-      const scrubbed = val.filter(v => !SENTINEL_VALUES.includes(v));
-      cleanedAnswers[key] = scrubbed;
+      cleanedAnswers[key] = val.filter(v => !SENTINEL_VALUES.includes(v));
     } else {
       cleanedAnswers[key] = val;
     }
+  }
+
+  if (isDirectLinearPath) {
+    // Tampons and pads are never offered on these paths, so sentinel them
+    cleanedAnswers["tampon-applicator"] = ["no-tampons"];
+    cleanedAnswers["pad-type"] = ["no-pads"];
+    cleanedAnswers["pad-use"] = ["no-pads-or-liners"];
+    // liner-type WAS answered — do not overwrite it
+    return cleanedAnswers;
   }
 
   // Parse interests from the cleaned answers
@@ -405,9 +413,13 @@ const pregnantQuestions: Question[] = [
       { value: "thong-liner", label: "Thong liners" },
       {value: "disposable-underwear", label:"Disposable underwear"}
     ],
-    conditional: (answers) => {
-      const interests = answers["product-interests"] as string[] || [];
-      return interests.includes("liner-interest");
+  conditional: (answers) => {
+    const goal = answers["pregnancy-goals"] as string;
+    // Always show on discharge/bladder-leakage goals; on other sub-paths,
+    // defer to product-interests like the other routes do
+    if (goal === "discharge" || goal === "bladder-leakage") return true;
+    const interests = answers["product-interests"] as string[] || [];
+    return interests.includes("liner-interest");
     },
   },
   {
