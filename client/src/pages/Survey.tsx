@@ -81,14 +81,14 @@ const getAutoSetAnswers = (answers: Record<string, string | string[]>): Record<s
     }
   }
 
-  if (isDirectLinearPath) {
-    // Tampons and pads are never offered on these paths, so sentinel them
-    cleanedAnswers["tampon-applicator"] = ["no-tampons"];
-    cleanedAnswers["pad-type"] = ["no-pads"];
-    cleanedAnswers["pad-use"] = ["no-pads-or-liners"];
-    // liner-type WAS answered — do not overwrite it
-    return cleanedAnswers;
-  }
+if (isDirectLinearPath) {
+  cleanedAnswers["tampon-applicator"] = ["no-tampons"];
+  cleanedAnswers["pad-type"] = ["no-pads"];
+  cleanedAnswers["pad-use"] = ["no-pads-or-liners"];
+  cleanedAnswers["liner-type"] = ["no-liners"]; // not used on this path
+  // pregnant-liner-type is preserved as-is
+  return cleanedAnswers;
+}
 
   // Parse interests from the cleaned answers
   let interests: string[] = [];
@@ -404,7 +404,7 @@ const pregnantQuestions: Question[] = [
     ],
   },
     {
-    id: "liner-type",
+    id: "pregnant-liner-type",
     question: "Any preference for products?",
     description: "Check all that apply.",
     type: "multiple",
