@@ -18,7 +18,7 @@ interface Question {
   id: string;
   question: string;
   description?: string;
-  type: "single" | "multiple" | "text" | "select-multiple" | "dropdown" | "ranking";
+  type: "single" | "multiple" | "text" | "select-multiple" | "dropdown" | "ranking" | "autocomplete";
   options?: { value: string; label: string }[];
   maxSelections?: number;
   conditional?: (answers: Record<string, string | string[]>) => boolean;
@@ -269,7 +269,34 @@ const menstruatingQuestions: Question[] = [
     },
   },
 
-
+{
+  id: "excluded-brands",
+  question: "Are there any brands you've already tried and don't want us to recommend?",
+  description: "Optional — search and select brands to exclude from your box.",
+  type: "autocomplete",
+  optional: true,
+  options: [
+    { value: "always", label: "Always" },
+    { value: "august", label: "August" },
+    { value: "cora", label: "Cora" },
+    { value: "daye", label: "Daye" },
+    { value: "here-we-flo", label: "Here We Flo" },
+    { value: "honey-pot", label: "Honey Pot" },
+    { value: "kind-cup", label: "Kind Cup" },
+    { value: "kotex", label: "Kotex" },
+    { value: "lola", label: "LOLA" },
+    { value: "marlow", label: "Marlow" },
+    { value: "natracare", label: "Natracare" },
+    { value: "ob", label: "OB" },
+    { value: "organyc", label: "Organyc" },
+    { value: "playtex", label: "Playtex" },
+    { value: "rael", label: "Rael" },
+    { value: "seventh-generation", label: "Seventh Generation" },
+    { value: "stayfree", label: "Stayfree" },
+    { value: "tampax", label: "Tampax" },
+    { value: "this-is-l", label: "This is L." },
+  ],
+},
 //  {
 //    id: "leaks",
 //    question: "Have you ever had leaks with your current products?",
@@ -469,6 +496,34 @@ const pregnantQuestions: Question[] = [
 //      { value: "leak-protection", label: "Leak protection" },
 //    ],
 //  },
+{
+  id: "excluded-brands",
+  question: "Are there any brands you've already tried and don't want us to recommend?",
+  description: "Optional — search and select brands to exclude from your box.",
+  type: "autocomplete",
+  optional: true,
+  options: [
+    { value: "always", label: "Always" },
+    { value: "august", label: "August" },
+    { value: "cora", label: "Cora" },
+    { value: "daye", label: "Daye" },
+    { value: "here-we-flo", label: "Here We Flo" },
+    { value: "honey-pot", label: "Honey Pot" },
+    { value: "kind-cup", label: "Kind Cup" },
+    { value: "kotex", label: "Kotex" },
+    { value: "lola", label: "LOLA" },
+    { value: "marlow", label: "Marlow" },
+    { value: "natracare", label: "Natracare" },
+    { value: "ob", label: "OB" },
+    { value: "organyc", label: "Organyc" },
+    { value: "playtex", label: "Playtex" },
+    { value: "rael", label: "Rael" },
+    { value: "seventh-generation", label: "Seventh Generation" },
+    { value: "stayfree", label: "Stayfree" },
+    { value: "tampax", label: "Tampax" },
+    { value: "this-is-l", label: "This is L." },
+  ],
+},
   {
     id: "additional-notes-pregnant",
     question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
@@ -642,6 +697,34 @@ const postpartumQuestions: Question[] = [
       return interests.includes("liner-interest");
     },
   }, 
+{
+  id: "excluded-brands",
+  question: "Are there any brands you've already tried and don't want us to recommend?",
+  description: "Optional — search and select brands to exclude from your box.",
+  type: "autocomplete",
+  optional: true,
+  options: [
+    { value: "always", label: "Always" },
+    { value: "august", label: "August" },
+    { value: "cora", label: "Cora" },
+    { value: "daye", label: "Daye" },
+    { value: "here-we-flo", label: "Here We Flo" },
+    { value: "honey-pot", label: "Honey Pot" },
+    { value: "kind-cup", label: "Kind Cup" },
+    { value: "kotex", label: "Kotex" },
+    { value: "lola", label: "LOLA" },
+    { value: "marlow", label: "Marlow" },
+    { value: "natracare", label: "Natracare" },
+    { value: "ob", label: "OB" },
+    { value: "organyc", label: "Organyc" },
+    { value: "playtex", label: "Playtex" },
+    { value: "rael", label: "Rael" },
+    { value: "seventh-generation", label: "Seventh Generation" },
+    { value: "stayfree", label: "Stayfree" },
+    { value: "tampax", label: "Tampax" },
+    { value: "this-is-l", label: "This is L." },
+  ],
+},
   {
     id: "additional-notes-postpartum",
     question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
@@ -811,6 +894,34 @@ const perimenopausalQuestions: Question[] = [
       return interests.includes("liner-interest");
     },
   },
+{
+  id: "excluded-brands",
+  question: "Are there any brands you've already tried and don't want us to recommend?",
+  description: "Optional — search and select brands to exclude from your box.",
+  type: "autocomplete",
+  optional: true,
+  options: [
+    { value: "always", label: "Always" },
+    { value: "august", label: "August" },
+    { value: "cora", label: "Cora" },
+    { value: "daye", label: "Daye" },
+    { value: "here-we-flo", label: "Here We Flo" },
+    { value: "honey-pot", label: "Honey Pot" },
+    { value: "kind-cup", label: "Kind Cup" },
+    { value: "kotex", label: "Kotex" },
+    { value: "lola", label: "LOLA" },
+    { value: "marlow", label: "Marlow" },
+    { value: "natracare", label: "Natracare" },
+    { value: "ob", label: "OB" },
+    { value: "organyc", label: "Organyc" },
+    { value: "playtex", label: "Playtex" },
+    { value: "rael", label: "Rael" },
+    { value: "seventh-generation", label: "Seventh Generation" },
+    { value: "stayfree", label: "Stayfree" },
+    { value: "tampax", label: "Tampax" },
+    { value: "this-is-l", label: "This is L." },
+  ],
+},
   {
     id: "additional-notes-peri",
     question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
@@ -878,6 +989,34 @@ const menopausalQuestions: Question[] = [
       { value: "significant-protection", label: "Significant protection" },
     ],
   },
+{
+  id: "excluded-brands",
+  question: "Are there any brands you've already tried and don't want us to recommend?",
+  description: "Optional — search and select brands to exclude from your box.",
+  type: "autocomplete",
+  optional: true,
+  options: [
+    { value: "always", label: "Always" },
+    { value: "august", label: "August" },
+    { value: "cora", label: "Cora" },
+    { value: "daye", label: "Daye" },
+    { value: "here-we-flo", label: "Here We Flo" },
+    { value: "honey-pot", label: "Honey Pot" },
+    { value: "kind-cup", label: "Kind Cup" },
+    { value: "kotex", label: "Kotex" },
+    { value: "lola", label: "LOLA" },
+    { value: "marlow", label: "Marlow" },
+    { value: "natracare", label: "Natracare" },
+    { value: "ob", label: "OB" },
+    { value: "organyc", label: "Organyc" },
+    { value: "playtex", label: "Playtex" },
+    { value: "rael", label: "Rael" },
+    { value: "seventh-generation", label: "Seventh Generation" },
+    { value: "stayfree", label: "Stayfree" },
+    { value: "tampax", label: "Tampax" },
+    { value: "this-is-l", label: "This is L." },
+  ],
+},
   {
     id: "additional-notes-meno",
     question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
@@ -1272,6 +1411,84 @@ function SurveyQuestionComponent({
             )}
           </div>
         );
+
+case "autocomplete": {
+  const selectedValues: string[] = Array.isArray(value) ? value as string[] : [];
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(-1);
+
+  const matches = (options ?? []).filter(
+    o => o.label.toLowerCase().includes(query.toLowerCase()) && !selectedValues.includes(o.value)
+  );
+
+  const selectBrand = (val: string) => {
+    onChange([...selectedValues, val]);
+    setQuery("");
+    setOpen(false);
+    setActiveIdx(-1);
+  };
+
+  const removeBrand = (val: string) => {
+    onChange(selectedValues.filter(v => v !== val));
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="relative">
+        <input
+          type="text"
+          className="w-full p-3 rounded-lg border-2 border-border bg-background text-sm focus:outline-none focus:border-primary"
+          placeholder="Search for brands here, if it doesn't show up we wouldn't have recommended it"
+          value={query}
+          onChange={e => { setQuery(e.target.value); setOpen(true); setActiveIdx(-1); }}
+          onFocus={() => { if (query) setOpen(true); }}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          onKeyDown={e => {
+            if (e.key === "ArrowDown") { setActiveIdx(i => Math.min(i + 1, matches.length - 1)); e.preventDefault(); }
+            else if (e.key === "ArrowUp") { setActiveIdx(i => Math.max(i - 1, 0)); e.preventDefault(); }
+            else if (e.key === "Enter" && activeIdx >= 0) { selectBrand(matches[activeIdx].value); }
+            else if (e.key === "Escape") setOpen(false);
+          }}
+          autoComplete="off"
+        />
+        {open && query && (
+          <div className="absolute z-10 w-full mt-1 rounded-lg border border-border bg-background shadow-md overflow-hidden">
+            {matches.length === 0 ? (
+              <p className="px-4 py-3 text-sm text-muted-foreground italic">
+                Don't worry — we wouldn't recommend this brand anyway.
+              </p>
+            ) : (
+              matches.map((opt, i) => (
+                <button
+                  key={opt.value}
+                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-muted ${i === activeIdx ? "bg-muted" : ""}`}
+                  onMouseDown={e => { e.preventDefault(); selectBrand(opt.value); }}
+                >
+                  {opt.label}
+                </button>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+      {selectedValues.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {selectedValues.map(val => {
+            const opt = options?.find(o => o.value === val);
+            return (
+              <span key={val} className="flex items-center gap-1.5 bg-muted border border-border rounded-full px-3 py-1 text-sm">
+                {opt?.label ?? val}
+                <button onClick={() => removeBrand(val)} className="text-muted-foreground hover:text-foreground text-base leading-none">×</button>
+              </span>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+        
 
       default:
         return (
