@@ -118,6 +118,35 @@ if (isDirectLinearPath) {
   return cleanedAnswers;
 };
 
+// Shared excluded-brands question (defined once, added in getAllQuestions)
+const excludedBrandsQuestion: Question = {
+  id: "excluded-brands",
+  question: "Are there any brands you've already tried and don't want us to recommend?",
+  description: "Optional — search and select brands to exclude from your box.",
+  type: "autocomplete",
+  optional: true,
+  options: [
+    { value: "always", label: "Always" },
+    { value: "august", label: "August" },
+    { value: "cora", label: "Cora" },
+    { value: "daye", label: "Daye" },
+    { value: "here-we-flo", label: "Here We Flo" },
+    { value: "honey-pot", label: "Honey Pot" },
+    { value: "kind-cup", label: "Kind Cup" },
+    { value: "kotex", label: "Kotex" },
+    { value: "lola", label: "LOLA" },
+    { value: "marlow", label: "Marlow" },
+    { value: "natracare", label: "Natracare" },
+    { value: "ob", label: "OB" },
+    { value: "organyc", label: "Organyc" },
+    { value: "playtex", label: "Playtex" },
+    { value: "rael", label: "Rael" },
+    { value: "seventh-generation", label: "Seventh Generation" },
+    { value: "stayfree", label: "Stayfree" },
+    { value: "tampax", label: "Tampax" },
+    { value: "this-is-l", label: "This is L." },
+  ],
+};
 
 // Base questions (shown to everyone)
 const baseQuestions: Question[] = [
@@ -269,34 +298,6 @@ const menstruatingQuestions: Question[] = [
     },
   },
 
-{
-  id: "excluded-brands",
-  question: "Are there any brands you've already tried and don't want us to recommend?",
-  description: "Optional — search and select brands to exclude from your box.",
-  type: "autocomplete",
-  optional: true,
-  options: [
-    { value: "always", label: "Always" },
-    { value: "august", label: "August" },
-    { value: "cora", label: "Cora" },
-    { value: "daye", label: "Daye" },
-    { value: "here-we-flo", label: "Here We Flo" },
-    { value: "honey-pot", label: "Honey Pot" },
-    { value: "kind-cup", label: "Kind Cup" },
-    { value: "kotex", label: "Kotex" },
-    { value: "lola", label: "LOLA" },
-    { value: "marlow", label: "Marlow" },
-    { value: "natracare", label: "Natracare" },
-    { value: "ob", label: "OB" },
-    { value: "organyc", label: "Organyc" },
-    { value: "playtex", label: "Playtex" },
-    { value: "rael", label: "Rael" },
-    { value: "seventh-generation", label: "Seventh Generation" },
-    { value: "stayfree", label: "Stayfree" },
-    { value: "tampax", label: "Tampax" },
-    { value: "this-is-l", label: "This is L." },
-  ],
-},
 //  {
 //    id: "leaks",
 //    question: "Have you ever had leaks with your current products?",
@@ -496,34 +497,6 @@ const pregnantQuestions: Question[] = [
 //      { value: "leak-protection", label: "Leak protection" },
 //    ],
 //  },
-{
-  id: "excluded-brands",
-  question: "Are there any brands you've already tried and don't want us to recommend?",
-  description: "Optional — search and select brands to exclude from your box.",
-  type: "autocomplete",
-  optional: true,
-  options: [
-    { value: "always", label: "Always" },
-    { value: "august", label: "August" },
-    { value: "cora", label: "Cora" },
-    { value: "daye", label: "Daye" },
-    { value: "here-we-flo", label: "Here We Flo" },
-    { value: "honey-pot", label: "Honey Pot" },
-    { value: "kind-cup", label: "Kind Cup" },
-    { value: "kotex", label: "Kotex" },
-    { value: "lola", label: "LOLA" },
-    { value: "marlow", label: "Marlow" },
-    { value: "natracare", label: "Natracare" },
-    { value: "ob", label: "OB" },
-    { value: "organyc", label: "Organyc" },
-    { value: "playtex", label: "Playtex" },
-    { value: "rael", label: "Rael" },
-    { value: "seventh-generation", label: "Seventh Generation" },
-    { value: "stayfree", label: "Stayfree" },
-    { value: "tampax", label: "Tampax" },
-    { value: "this-is-l", label: "This is L." },
-  ],
-},
   {
     id: "additional-notes-pregnant",
     question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
@@ -639,7 +612,7 @@ const postpartumQuestions: Question[] = [
     description: "Check all that apply.",
     type: "multiple",
     options: [
-      { value: "lochia", label: "For lochia, I haven’t restarted my period yet" },
+      { value: "lochia", label: "For lochia, I haven't restarted my period yet" },
       { value: "bladder-leakage", label: "In case of bladder leakage" },
       { value: "during-sleep", label: "I'm using them when I am sleeping" },
       { value: "day-on-period", label: "During the day when I'm on my period" },
@@ -697,34 +670,6 @@ const postpartumQuestions: Question[] = [
       return interests.includes("liner-interest");
     },
   }, 
-{
-  id: "excluded-brands",
-  question: "Are there any brands you've already tried and don't want us to recommend?",
-  description: "Optional — search and select brands to exclude from your box.",
-  type: "autocomplete",
-  optional: true,
-  options: [
-    { value: "always", label: "Always" },
-    { value: "august", label: "August" },
-    { value: "cora", label: "Cora" },
-    { value: "daye", label: "Daye" },
-    { value: "here-we-flo", label: "Here We Flo" },
-    { value: "honey-pot", label: "Honey Pot" },
-    { value: "kind-cup", label: "Kind Cup" },
-    { value: "kotex", label: "Kotex" },
-    { value: "lola", label: "LOLA" },
-    { value: "marlow", label: "Marlow" },
-    { value: "natracare", label: "Natracare" },
-    { value: "ob", label: "OB" },
-    { value: "organyc", label: "Organyc" },
-    { value: "playtex", label: "Playtex" },
-    { value: "rael", label: "Rael" },
-    { value: "seventh-generation", label: "Seventh Generation" },
-    { value: "stayfree", label: "Stayfree" },
-    { value: "tampax", label: "Tampax" },
-    { value: "this-is-l", label: "This is L." },
-  ],
-},
   {
     id: "additional-notes-postpartum",
     question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
@@ -894,34 +839,6 @@ const perimenopausalQuestions: Question[] = [
       return interests.includes("liner-interest");
     },
   },
-{
-  id: "excluded-brands",
-  question: "Are there any brands you've already tried and don't want us to recommend?",
-  description: "Optional — search and select brands to exclude from your box.",
-  type: "autocomplete",
-  optional: true,
-  options: [
-    { value: "always", label: "Always" },
-    { value: "august", label: "August" },
-    { value: "cora", label: "Cora" },
-    { value: "daye", label: "Daye" },
-    { value: "here-we-flo", label: "Here We Flo" },
-    { value: "honey-pot", label: "Honey Pot" },
-    { value: "kind-cup", label: "Kind Cup" },
-    { value: "kotex", label: "Kotex" },
-    { value: "lola", label: "LOLA" },
-    { value: "marlow", label: "Marlow" },
-    { value: "natracare", label: "Natracare" },
-    { value: "ob", label: "OB" },
-    { value: "organyc", label: "Organyc" },
-    { value: "playtex", label: "Playtex" },
-    { value: "rael", label: "Rael" },
-    { value: "seventh-generation", label: "Seventh Generation" },
-    { value: "stayfree", label: "Stayfree" },
-    { value: "tampax", label: "Tampax" },
-    { value: "this-is-l", label: "This is L." },
-  ],
-},
   {
     id: "additional-notes-peri",
     question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
@@ -989,34 +906,6 @@ const menopausalQuestions: Question[] = [
       { value: "significant-protection", label: "Significant protection" },
     ],
   },
-{
-  id: "excluded-brands",
-  question: "Are there any brands you've already tried and don't want us to recommend?",
-  description: "Optional — search and select brands to exclude from your box.",
-  type: "autocomplete",
-  optional: true,
-  options: [
-    { value: "always", label: "Always" },
-    { value: "august", label: "August" },
-    { value: "cora", label: "Cora" },
-    { value: "daye", label: "Daye" },
-    { value: "here-we-flo", label: "Here We Flo" },
-    { value: "honey-pot", label: "Honey Pot" },
-    { value: "kind-cup", label: "Kind Cup" },
-    { value: "kotex", label: "Kotex" },
-    { value: "lola", label: "LOLA" },
-    { value: "marlow", label: "Marlow" },
-    { value: "natracare", label: "Natracare" },
-    { value: "ob", label: "OB" },
-    { value: "organyc", label: "Organyc" },
-    { value: "playtex", label: "Playtex" },
-    { value: "rael", label: "Rael" },
-    { value: "seventh-generation", label: "Seventh Generation" },
-    { value: "stayfree", label: "Stayfree" },
-    { value: "tampax", label: "Tampax" },
-    { value: "this-is-l", label: "This is L." },
-  ],
-},
   {
     id: "additional-notes-meno",
     question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
@@ -1088,6 +977,11 @@ const getAllQuestions = (): Question[] => {
       ...q,
       conditional: (answers: Record<string, string | string[]>) => getUserPath(answers) === "menopausal"
     })),
+    // Single shared excluded-brands question — shown for any path, positioned before the final notes questions
+    {
+      ...excludedBrandsQuestion,
+      conditional: (answers: Record<string, string | string[]>) => getUserPath(answers) !== null,
+    },
   ];
 };
 
@@ -1495,15 +1389,14 @@ function SurveyQuestionComponent({
           </div>
         );
 
-case "autocomplete":
-  return (
-    <AutocompleteInput
-      options={options ?? []}
-      value={Array.isArray(value) ? value as string[] : []}
-      onChange={onChange}
-    />
-  );
-        
+      case "autocomplete":
+        return (
+          <AutocompleteInput
+            options={options ?? []}
+            value={Array.isArray(value) ? value as string[] : []}
+            onChange={onChange}
+          />
+        );
 
       default:
         return (
