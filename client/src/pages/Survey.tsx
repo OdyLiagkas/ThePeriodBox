@@ -1196,6 +1196,89 @@ function DragDropRanking({ options, value, onChange }: DragDropRankingProps) {
   );
 }
 
+interface AutocompleteInputProps {
+  options: { value: string; label: string }[];
+  value: string[];
+  onChange: (value: string[]) => void;
+}
+
+function AutocompleteInput({ options, value, onChange }: AutocompleteInputProps) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(-1);
+
+  const matches = options.filter(
+    o => o.label.toLowerCase().includes(query.toLowerCase()) && !value.includes(o.value)
+  );
+
+  const selectBrand = (val: string) => {
+    onChange([...value, val]);
+    setQuery("");
+    setOpen(false);
+    setActiveIdx(-1);
+  };
+
+  const removeBrand = (val: string) => {
+    onChange(value.filter(v => v !== val));
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="relative">
+        <input
+          type="text"
+          className="w-full p-3 rounded-lg border-2 border-border bg-background text-sm focus:outline-none focus:border-primary"
+          placeholder="Search for brands here, if it doesn't show up we wouldn't have recommended it"
+          value={query}
+          onChange={e => { setQuery(e.target.value); setOpen(true); setActiveIdx(-1); }}
+          onFocus={() => { if (query) setOpen(true); }}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          onKeyDown={e => {
+            if (e.key === "ArrowDown") { setActiveIdx(i => Math.min(i + 1, matches.length - 1)); e.preventDefault(); }
+            else if (e.key === "ArrowUp") { setActiveIdx(i => Math.max(i - 1, 0)); e.preventDefault(); }
+            else if (e.key === "Enter" && activeIdx >= 0) { selectBrand(matches[activeIdx].value); }
+            else if (e.key === "Escape") setOpen(false);
+          }}
+          autoComplete="off"
+        />
+        {open && query && (
+          <div className="absolute z-10 w-full mt-1 rounded-lg border border-border bg-background shadow-md overflow-hidden">
+            {matches.length === 0 ? (
+              <p className="px-4 py-3 text-sm text-muted-foreground italic">
+                Don't worry — we wouldn't recommend this brand anyway.
+              </p>
+            ) : (
+              matches.map((opt, i) => (
+                <button
+                  key={opt.value}
+                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-muted ${i === activeIdx ? "bg-muted" : ""}`}
+                  onMouseDown={e => { e.preventDefault(); selectBrand(opt.value); }}
+                >
+                  {opt.label}
+                </button>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {value.map(val => {
+            const opt = options.find(o => o.value === val);
+            return (
+              <span key={val} className="flex items-center gap-1.5 bg-muted border border-border rounded-full px-3 py-1 text-sm">
+                {opt?.label ?? val}
+                <button onClick={() => removeBrand(val)} className="text-muted-foreground hover:text-foreground text-base leading-none">×</button>
+              </span>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 // Updated SurveyQuestionComponent - replace the entire component
 interface SurveyQuestionProps extends Question {
   value: string | string[] | undefined;
@@ -1412,82 +1495,14 @@ function SurveyQuestionComponent({
           </div>
         );
 
-case "autocomplete": {
-  const selectedValues: string[] = Array.isArray(value) ? value as string[] : [];
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
-  const [activeIdx, setActiveIdx] = useState(-1);
-
-  const matches = (options ?? []).filter(
-    o => o.label.toLowerCase().includes(query.toLowerCase()) && !selectedValues.includes(o.value)
-  );
-
-  const selectBrand = (val: string) => {
-    onChange([...selectedValues, val]);
-    setQuery("");
-    setOpen(false);
-    setActiveIdx(-1);
-  };
-
-  const removeBrand = (val: string) => {
-    onChange(selectedValues.filter(v => v !== val));
-  };
-
+case "autocomplete":
   return (
-    <div className="space-y-3">
-      <div className="relative">
-        <input
-          type="text"
-          className="w-full p-3 rounded-lg border-2 border-border bg-background text-sm focus:outline-none focus:border-primary"
-          placeholder="Search for brands here, if it doesn't show up we wouldn't have recommended it"
-          value={query}
-          onChange={e => { setQuery(e.target.value); setOpen(true); setActiveIdx(-1); }}
-          onFocus={() => { if (query) setOpen(true); }}
-          onBlur={() => setTimeout(() => setOpen(false), 150)}
-          onKeyDown={e => {
-            if (e.key === "ArrowDown") { setActiveIdx(i => Math.min(i + 1, matches.length - 1)); e.preventDefault(); }
-            else if (e.key === "ArrowUp") { setActiveIdx(i => Math.max(i - 1, 0)); e.preventDefault(); }
-            else if (e.key === "Enter" && activeIdx >= 0) { selectBrand(matches[activeIdx].value); }
-            else if (e.key === "Escape") setOpen(false);
-          }}
-          autoComplete="off"
-        />
-        {open && query && (
-          <div className="absolute z-10 w-full mt-1 rounded-lg border border-border bg-background shadow-md overflow-hidden">
-            {matches.length === 0 ? (
-              <p className="px-4 py-3 text-sm text-muted-foreground italic">
-                Don't worry — we wouldn't recommend this brand anyway.
-              </p>
-            ) : (
-              matches.map((opt, i) => (
-                <button
-                  key={opt.value}
-                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-muted ${i === activeIdx ? "bg-muted" : ""}`}
-                  onMouseDown={e => { e.preventDefault(); selectBrand(opt.value); }}
-                >
-                  {opt.label}
-                </button>
-              ))
-            )}
-          </div>
-        )}
-      </div>
-      {selectedValues.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {selectedValues.map(val => {
-            const opt = options?.find(o => o.value === val);
-            return (
-              <span key={val} className="flex items-center gap-1.5 bg-muted border border-border rounded-full px-3 py-1 text-sm">
-                {opt?.label ?? val}
-                <button onClick={() => removeBrand(val)} className="text-muted-foreground hover:text-foreground text-base leading-none">×</button>
-              </span>
-            );
-          })}
-        </div>
-      )}
-    </div>
+    <AutocompleteInput
+      options={options ?? []}
+      value={Array.isArray(value) ? value as string[] : []}
+      onChange={onChange}
+    />
   );
-}
         
 
       default:
