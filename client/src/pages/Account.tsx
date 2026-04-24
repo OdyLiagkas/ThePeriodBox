@@ -402,18 +402,21 @@ function NotificationPreference({ onGoToSurvey }: NotificationPreferenceProps) {
         <div className="space-y-2">
 {isNotified ? (
   <div className="space-y-4">
-    <div className="p-6 rounded-xl border-2 border-primary bg-white shadow-lg">
-      <ShopifyBuyButton
-        domain="zhvm0a-bz.myshopify.com"
-        storefrontAccessToken="4687869958aa64a941d09fbbf1a48450"
-        productId="15636200652960"
-        moneyFormat="%24%7B%7Bamount%7D%7D"
-        buttonText="Add to Cart"
-      />
+    <div className="text-center space-y-2 mb-4">
+      <h2 className="text-2xl md:text-3xl font-bold font-heading">
+        Your period box is ready! 🎉
+      </h2>
+      <p className="text-muted-foreground text-lg">
+        Click below to purchase your personalized period box
+      </p>
     </div>
-    <p className="text-center text-sm text-muted-foreground">
-      Your personalized period box is ready for purchase
-    </p>
+
+    <ShopifyBuyButton
+      domain="zhvm0a-bz.myshopify.com"
+      storefrontAccessToken="4687869958aa64a941d09fbbf1a48450"
+      productId="15636200652960"
+      moneyFormat="%24%7B%7Bamount%7D%7D"
+    />
   </div>
 ) : (
             <>
