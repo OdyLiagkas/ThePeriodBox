@@ -4,11 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef  } from "react";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductCardNoHeart } from "@/components/ProductCardNoHeart";
 import { useSurvey, SurveyResult } from "@/hooks/useSurvey";
 import { SurveyAnswers } from "@/components/SurveyAnswers";
+import ShopifyBuyButton from '@/components/ShopifyBuyButton';
 import { 
   Package, 
   History, 
@@ -54,6 +55,14 @@ interface LikedProduct {
   imageUrl: string;
   category: string;
   features: string[];
+}
+
+interface ShopifyBuyButtonProps {
+  domain: string;
+  storefrontAccessToken: string;
+  productId: string;
+  moneyFormat?: string;
+  buttonText?: string;
 }
 
 type TabValue = 'box' | 'history' | 'survey' | 'orders';
@@ -391,16 +400,22 @@ function NotificationPreference({ onGoToSurvey }: NotificationPreferenceProps) {
         </div>
 
         <div className="space-y-2">
-          {isNotified ? (
-            <>
-              <h2 className="text-2xl md:text-3xl font-bold font-heading">
-                Your period box is ready! 🎉
-              </h2>
-              <p className="text-muted-foreground text-lg">
-                Click below to purchase your personalized period box
-              </p>
-            </>
-          ) : (
+{isNotified ? (
+  <div className="space-y-4">
+    <div className="p-6 rounded-xl border-2 border-primary bg-white shadow-lg">
+      <ShopifyBuyButton
+        domain="zhvm0a-bz.myshopify.com"
+        storefrontAccessToken="4687869958aa64a941d09fbbf1a48450"
+        productId="15636200652960"
+        moneyFormat="%24%7B%7Bamount%7D%7D"
+        buttonText="Add to Cart"
+      />
+    </div>
+    <p className="text-center text-sm text-muted-foreground">
+      Your personalized period box is ready for purchase
+    </p>
+  </div>
+) : (
             <>
               <h2 className="text-2xl md:text-3xl font-bold font-heading">
                 We are currently working on curating your perfect sample box
