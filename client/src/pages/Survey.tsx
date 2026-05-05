@@ -1,294 +1,3 @@
-
-Claude finished the response
-You said: import passport from "passport";
-
-import { useState, useEffect } from "react"; import { Header } from "@/components/Header"; import { Footer } from "@/components/Footer"; import { SurveyProgress } from "@/components/SurveyProgress"; import { SurveyQuestion } from "@/components/SurveyQuestion"; import { Button } from "@/components/ui
-PASTED
-
-import express, { type Request, Response, NextFunction } from "express"; import { registerRoutes } from "./routes"; import { setupVite, serveStatic, log } from "./vite"; import session from "express-session"; import connectPg from "connect-pg-simple"; import passport from "passport"; import "./auth"
-PASTED
-import passport from "passport";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import { Strategy as FacebookStrategy } from "passport-facebook";
-import { db } from "./db";
-import { users } from "@shared/schema";
-import { eq } from "drizzle-orm";
-import { User as UserType } from "@shared/models/auth";
-declare global {
-namespace Express {
-interface User extends UserType {}
-  }
-}
-// Shared verify function (same logic for both)
-const googleVerify = async (_accessToken: any, _refreshToken: any, profile: any, done: any) => {
-try {
-const [existingUser] = await db.select().from(users).where(eq(users.googleId, profile.id));
-if (existingUser) return done(null, existingUser);
-const [newUser] = await db.insert(users).values({
-id: crypto.randomUUID(),
-googleId: profile.id,
-facebookId: null,
-email: profile.emails?.[0].value,
-firstName: profile.name?.givenName,
-lastName: profile.name?.familyName,
-profileImageUrl: profile.photos?.[0].value,
-    }).returning();
-done(null, newUser);
-  } catch (err) {
-done(err);
-  }
-};
-const facebookVerify = async (_accessToken: any, _refreshToken: any, profile: any, done: any) => {
-try {
-// Check by facebookId first
-let [user] = await db.select().from(users).where(eq(users.facebookId, profile.id));
-if (!user) {
-// Check by email to merge with existing account
-const email = profile.emails?.[0]?.value;
-if (email) {
-        [user] = await db.select().from(users).where(eq(users.email, email));
-      }
-    }
-if (user) {
-// Backfill facebookId if they previously signed in with Google
-if (!user.facebookId) {
-await db.update(users).set({ facebookId: profile.id }).where(eq(users.id, user.id));
-      }
-return done(null, user);
-    }
-const [newUser] = await db.insert(users).values({
-id: crypto.randomUUID(),
-googleId: null,
-facebookId: profile.id,
-email: profile.emails?.[0]?.value,
-firstName: profile.name?.givenName,
-lastName: profile.name?.familyName,
-profileImageUrl: profile.photos?.[0]?.value,
-    }).returning();
-done(null, newUser);
-  } catch (err) {
-done(err);
-  }
-};
-// Strategy 1: Regular login → goes to /account
-passport.use("google", new GoogleStrategy({
-clientID: process.env.GOOGLE_CLIENT_ID!,
-clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-callbackURL: ${process.env.AUTH_REDIRECT_URL}/api/auth/google/callback,
-  },
-googleVerify
-));
-// Strategy 2: Survey login → goes to /survey
-passport.use("google-survey", new GoogleStrategy({
-clientID: process.env.GOOGLE_CLIENT_ID!,
-clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-callbackURL: ${process.env.AUTH_REDIRECT_URL}/api/auth/google/callback2,
-  },
-googleVerify
-));
-passport.use("facebook", new FacebookStrategy({
-clientID: process.env.FACEBOOK_APP_ID!,
-clientSecret: process.env.FACEBOOK_APP_SECRET!,
-callbackURL: ${process.env.AUTH_REDIRECT_URL}/api/auth/facebook/callback,
-profileFields: ["id", "emails", "name", "photos"],
-enableProof: true,
-}, facebookVerify));
-// Strategy 2: Survey login → goes to /survey
-passport.use("facebook-survey", new FacebookStrategy({
-clientID: process.env.FACEBOOK_APP_ID!,
-clientSecret: process.env.FACEBOOK_APP_SECRET!,
-callbackURL: ${process.env.AUTH_REDIRECT_URL}/api/auth/facebook/callback-survey,
-profileFields: ["id", "emails", "name", "photos"],
-enableProof: true,
-}, facebookVerify));
-passport.serializeUser((user: any, done) => done(null, user.id));
-passport.deserializeUser(async (id: string, done) => {
-try {
-const [user] = await db.select().from(users).where(eq(users.id, id));
-done(null, user);
-  } catch (err) {
-done(err);
-  }
-});
-Can I make it so that the survey page doesnt require the person to be logged in, and if for it to make people login when they want to submit the survey, so that after they log in the survey responses can be added to their account on the backend?
-Show more
-1:56 AM
-Claude responded: Looking at your code, here's the plan:
-Looking at your code, here's the plan:
-Remove the auth redirect on survey load
-Save answers to localStorage before triggering login
-After OAuth callback redirects to /survey, restore answers and auto-submit
-Here are the changes:
-Here's the full solution. The key insight is storing survey answers in localStorage before triggering login, then restoring and auto-submitting after the OAuth redirect.
-client/src/pages/survey.tsx — three changes:
-1. Remove the auth redirect on load — delete the useEffect that redirects to /survey-login.
-2. Add localStorage save/restore — save answers before login, restore on mount.
-3. Gate submission behind auth — show a login modal when they hit "Complete Survey" if not logged in.
-server/index.ts — no changes needed, OAuth callbacks already redirect to /survey.
-Here are the specific edits:
-tsx
-// 1. REMOVE this useEffect (around line 580):
-useEffect(() => {
-  if (!isLoading && !isAuthenticated) setLocation("/survey-login");
-}, [isLoading, isAuthenticated, setLocation]);
-
-// 2. REPLACE with this — restore saved answers after login:
-const STORAGE_KEY = "survey_answers_draft";
-
-useEffect(() => {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    try {
-      const parsed = JSON.parse(saved);
-      setAnswers(parsed.answers || {});
-      setCurrentStep(parsed.step || 0);
-    } catch {}
-  }
-}, []); // runs once on mount
-
-// Auto-submit if user just returned from OAuth with saved answers
-useEffect(() => {
-  if (!isAuthenticated || isLoading) return;
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (!saved) return;
-  try {
-    const parsed = JSON.parse(saved);
-    if (parsed.pendingSubmit) {
-      localStorage.removeItem(STORAGE_KEY);
-      const finalAnswers = getAutoSetAnswers(parsed.answers);
-      submitSurvey.mutate({ answers: finalAnswers });
-    }
-  } catch {}
-}, [isAuthenticated, isLoading]);
-tsx
-// 3. REPLACE handleNext with this version:
-const handleNext = () => {
-  if (isLastQuestion) {
-    if (!isAuthenticated) {
-      // Save progress + flag pending submit, then redirect to login
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        answers,
-        step: currentStep,
-        pendingSubmit: true,
-      }));
-      // Use the survey login flow so OAuth redirects back to /survey
-      window.location.href = "/api/auth/google-survey";
-      return;
-    }
-    setAnswers(prevAnswers => {
-      const finalAnswers = getAutoSetAnswers(prevAnswers);
-      submitSurvey.mutate({ answers: finalAnswers });
-      return finalAnswers;
-    });
-  } else {
-    // Save progress on every step so nothing is lost
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      answers,
-      step: currentStep + 1,
-      pendingSubmit: false,
-    }));
-    setCurrentStep(currentStep + 1);
-  }
-};
-tsx
-// 4. On successful submit, clean up localStorage:
-const submitSurvey = useMutation({
-  // ...existing mutationFn...
-  onSuccess: (data) => {
-    localStorage.removeItem(STORAGE_KEY); // add this line
-    console.log("Survey submitted successfully:", data);
-    setIsComplete(true);
-  },
-  // ...existing onError...
-});
-Here's a flow diagram showing how this works end-to-end:
-
-A few things worth noting:
-Why this works with your existing OAuth setup: Your google-survey strategy already redirects back to /survey after login (res.redirect("/survey")), so the page remounts with the user now authenticated — the useEffect watching isAuthenticated fires and picks up the pendingSubmit flag.
-Facebook login: You'd want to offer both options on that final gate. Instead of hardcoding window.location.href = "/api/auth/google-survey", you could show a small modal with both Google and Facebook buttons pointing to their respective survey OAuth routes.
-Draft recovery: Because you're saving on every step (not just at the end), if a user closes the tab mid-survey and comes back, their progress will still be there. You might want to show a "resume where you left off?" prompt on mount if saved answers exist.
-Security: The answers are only in localStorage until submit — the actual submission still goes through your authenticated /api/survey-responses endpoint with credentials: "include", so the session cookie is always validated server-side.
-You said: will the local storage make a pop up window to people asking if they allow it to save there?
-will the local storage make a pop up window to people asking if they allow it to save there?
-1:58 AM
-Claude responded: No, localStorage never triggers a browser permission popup.
-No, localStorage never triggers a browser permission popup. It's completely silent and automatic — no prompts, no consent dialogs, nothing the user sees at all.
-The APIs that do ask for permission are things like location, camera, microphone, and notifications. localStorage is just a simple key-value store that every website uses freely (it's how sites remember your shopping cart, theme preference, etc.). Browsers grant it automatically with no user interaction required.
-The only caveats worth knowing:
-It's cleared if the user explicitly clears their browser data
-It doesn't work if the user has a browser extension blocking storage (very rare)
-It's per-domain, so your data stays on your site only
-For your use case it's the right tool — quiet, instant, and reliable for temporarily holding form state across an OAuth redirect.
-You said: So, the only changes that need to happen are within Sure
-So, the only changes that need to happen are within Sure
-1:59 AM
-Claude responded: Yes, all the changes are only in client/src/pages/survey.
-Yes, all the changes are only in client/src/pages/survey.tsx. Nothing in server/index.ts or auth.ts needs to touch — your OAuth callbacks already redirect back to /survey, which is exactly what's needed.
-To summarize the four edits in that one file:
-Delete the useEffect that redirects unauthenticated users to /survey-login
-Add a useEffect on mount that restores saved answers from localStorage
-Add a useEffect watching isAuthenticated that auto-submits if pendingSubmit is set
-Replace handleNext to save progress to localStorage and redirect to OAuth instead of blocking, when the user isn't logged in
-Add localStorage.removeItem(STORAGE_KEY) inside onSuccess of submitSurvey
-That's it — five small surgical changes, all in one file.
-You said: can you send me the final survey file so that It works the way we described?
-can you send me the final survey file so that It works the way we described?
-1:59 AM
-Claude responded: Let me build the final file with all changes applied.
-Let me build the final file with all changes applied.
-
-Viewed a file, created a file, read a file
-Viewed a file, created a file, read a file
-Here's the complete file. The only visible change users will notice is the last button label — when they're not logged in and reach the final question, it reads "Sign in to Submit" instead of "Complete Survey", so they know what's coming. Everything else is invisible to them.
-The four things that changed from your original:
-The auth redirect useEffect on load is gone
-A useEffect on mount restores any saved draft from localStorage
-A useEffect watching isAuthenticated triggers auto-submit if pendingSubmit is in localStorage
-handleNext saves to localStorage and redirects to /api/auth/google-survey instead of blocking, when the user isn't logged in and is on the last question
-onSuccess clears localStorage so the draft doesn't linger after a successful submit
-
-Survey
-Code · TSX 
-You said: can you make the login be either google or facebook instead of just google?
-can you make the login be either google or facebook instead of just google?
-2:17 AM
-Claude responded: The only thing that needs to change is the handleNext function — instead of immediately redirecting to Google, it should show a small modal letting the user pi…
-
-Check current survey file
-Check current survey file
-The only thing that needs to change is the handleNext function — instead of immediately redirecting to Google, it should show a small modal letting the user pick Google or Facebook. I'll add a simple modal state and replace the hard redirect.
-
-Edited 2 files
-Edited 2 files
-Now add the modal UI just before the closing </div> of the main survey return:
-
-Add login modal overlay to the survey page return
-Add login modal overlay to the survey page return
-Now fix the broken closing tags since the modal's outer </div> replaced the original one:
-
-Check the end of the file to make sure closing tags are correct
-Check the end of the file to make sure closing tags are correct
-There are duplicate closing tags. Let me fix that:
-
-Edited a file, viewed a file
-Edited a file, viewed a file
-Clean. Let me present the final file:
-
-Presented file
-Presented file
-When an unauthenticated user clicks "Sign in to Submit", a modal pops up with both options — Google and Facebook — each with their respective brand logo. Clicking either one redirects to the correct OAuth survey route (/api/auth/google-survey or /api/auth/facebook-survey), both of which already exist in your server/index.ts and redirect back to /survey after login, where the auto-submit picks up. Clicking outside the modal or "Cancel" dismisses it without losing their saved answers.
-
-Survey
-Code · TSX 
-
-You are out of free messages until 6:50 AM
-Get more
-
-
-Claude is AI and can make mistakes. Please double-check responses.
-Survey · TSX
-Copy
-
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -304,7 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
- 
+
 interface Question {
   id: string;
   question: string;
@@ -317,7 +26,7 @@ interface Question {
   otherPlaceholder?: string;
   optional?: boolean;
 }
- 
+
 // Hormonal stage options
 const hormonalStageOptions = [
   { value: "no-change", label: "Not in a period of hormonal change" },
@@ -329,7 +38,7 @@ const hormonalStageOptions = [
   { value: "perimenopausal", label: "Perimenopausal" },
   { value: "menopausal", label: "Menopausal" },
 ];
- 
+
 // Helper to determine which path user is on
 const getUserPath = (answers: Record<string, string | string[]>) => {
   const stage = answers["hormonal-stage"] as string;
@@ -341,27 +50,27 @@ const getUserPath = (answers: Record<string, string | string[]>) => {
   if (stage === "menopausal") return "menopausal";
   return null;
 };
- 
+
 const getPregnantSubPath = (answers: Record<string, string | string[]>) => {
   const goal = answers["pregnancy-goals"] as string;
   if (goal === "postpartum-prep") return "postpartum";
   if (goal === "period-return") return "menstruating";
   return "pregnant";
 };
- 
+
 const shouldShowGoals = (answers: Record<string, string | string[]>) => {
   const stage = answers["hormonal-stage"] as string;
   return ["no-change", "on-bc", "stopped-bc", "started-bc", "perimenopausal"].includes(stage);
 };
- 
+
 const SENTINEL_VALUES = ["no-tampons", "no-pads", "no-liners", "no-pads-or-liners", "no-period"];
- 
+
 const STORAGE_KEY = "survey_answers_draft";
- 
+
 const getAutoSetAnswers = (answers: Record<string, string | string[]>): Record<string, string | string[]> => {
   const goal = answers["pregnancy-goals"] as string;
   const isDirectLinearPath = goal === "discharge" || goal === "bladder-leakage";
- 
+
   const cleanedAnswers: Record<string, string | string[]> = {};
   for (const [key, val] of Object.entries(answers)) {
     if (Array.isArray(val)) {
@@ -370,21 +79,21 @@ const getAutoSetAnswers = (answers: Record<string, string | string[]>): Record<s
       cleanedAnswers[key] = val;
     }
   }
- 
+
   if (isDirectLinearPath) {
     cleanedAnswers["tampon-applicator"] = ["no-tampons"];
     cleanedAnswers["pad-type"] = ["no-pads"];
     cleanedAnswers["pad-use"] = ["no-pads-or-liners"];
     cleanedAnswers["liner-type"] = ["no-liners"];
- 
+
     if (cleanedAnswers["pregnant-liner-type-discharge"]) {
       cleanedAnswers["pregnant-liner-type"] = cleanedAnswers["pregnant-liner-type-discharge"];
       delete cleanedAnswers["pregnant-liner-type-discharge"];
     }
- 
+
     return cleanedAnswers;
   }
- 
+
   let interests: string[] = [];
   const raw = cleanedAnswers["product-interests"];
   if (Array.isArray(raw)) {
@@ -392,20 +101,20 @@ const getAutoSetAnswers = (answers: Record<string, string | string[]>): Record<s
   } else if (typeof raw === "string") {
     interests = raw.split(",").map(s => s.trim()).filter(Boolean);
   }
- 
+
   const hasTampon = interests.includes("tampon-interest");
   const hasPad = interests.includes("pad-interest");
   const hasLiner = interests.includes("liner-interest");
- 
+
   if (!hasTampon) cleanedAnswers["tampon-applicator"] = ["no-tampons"];
   if (!hasPad)    cleanedAnswers["pad-type"]          = ["no-pads"];
   if (!hasLiner)  cleanedAnswers["liner-type"]        = ["no-liners"];
   if (!hasPad && !hasLiner) cleanedAnswers["pad-use"] = ["no-pads-or-liners"];
- 
+
   return cleanedAnswers;
 };
- 
- 
+
+
 // Base questions (shown to everyone)
 const baseQuestions: Question[] = [
   {
@@ -428,7 +137,7 @@ const baseQuestions: Question[] = [
     conditional: (answers) => shouldShowGoals(answers),
   },
 ];
- 
+
 // Menstruating path questions
 const menstruatingQuestions: Question[] = [
   {
@@ -578,7 +287,7 @@ const menstruatingQuestions: Question[] = [
     ],
   },
 ];
- 
+
 // Pregnant path questions
 const pregnantQuestions: Question[] = [
   {
@@ -699,7 +408,7 @@ const pregnantQuestions: Question[] = [
     optional: true,
   },
 ];
- 
+
 // Postpartum path questions
 const postpartumQuestions: Question[] = [
   {
@@ -881,7 +590,7 @@ const postpartumQuestions: Question[] = [
     optional: true,
   },
 ];
- 
+
 // Perimenopausal path questions
 const perimenopausalQuestions: Question[] = [
   {
@@ -1080,7 +789,7 @@ const perimenopausalQuestions: Question[] = [
     optional: true,
   },
 ];
- 
+
 // Menopausal path questions
 const menopausalQuestions: Question[] = [
   {
@@ -1192,7 +901,7 @@ const menopausalQuestions: Question[] = [
     optional: true,
   },
 ];
- 
+
 // Combine all questions with conditional logic
 const getAllQuestions = (): Question[] => {
   return [
@@ -1252,19 +961,19 @@ const getAllQuestions = (): Question[] => {
     })),
   ];
 };
- 
+
 // Drag and Drop Ranking Component
 interface DragDropRankingProps {
   options: { value: string; label: string }[];
   value: string[];
   onChange: (value: string[]) => void;
 }
- 
+
 function DragDropRanking({ options, value, onChange }: DragDropRankingProps) {
   const [items, setItems] = useState<{ value: string; label: string }[]>([]);
   const [draggingItem, setDraggingItem] = useState<string | null>(null);
   const [dragOverItem, setDragOverItem] = useState<string | null>(null);
- 
+
   useEffect(() => {
     if (value && value.length > 0) {
       const orderedItems = value
@@ -1276,49 +985,49 @@ function DragDropRanking({ options, value, onChange }: DragDropRankingProps) {
       setItems([...options]);
     }
   }, [options, value]);
- 
+
   const handleDragStart = (e: React.DragEvent, itemValue: string) => {
     setDraggingItem(itemValue);
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", itemValue);
   };
- 
+
   const handleDragEnd = () => {
     setDraggingItem(null);
     setDragOverItem(null);
   };
- 
+
   const handleDragOver = (e: React.DragEvent, overItemValue: string) => {
     e.preventDefault();
     if (draggingItem && draggingItem !== overItemValue) {
       setDragOverItem(overItemValue);
     }
   };
- 
+
   const handleDrop = (e: React.DragEvent, targetValue: string) => {
     e.preventDefault();
     if (!draggingItem || draggingItem === targetValue) return;
- 
+
     const newItems = [...items];
     const dragIndex = newItems.findIndex(i => i.value === draggingItem);
     const dropIndex = newItems.findIndex(i => i.value === targetValue);
- 
+
     if (dragIndex !== -1 && dropIndex !== -1) {
       const [removed] = newItems.splice(dragIndex, 1);
       newItems.splice(dropIndex, 0, removed);
       setItems(newItems);
       onChange(newItems.map(i => i.value));
     }
- 
+
     setDraggingItem(null);
     setDragOverItem(null);
   };
- 
+
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOverItem(null);
   };
- 
+
   return (
     <div className="space-y-2">
       {items.map((item, index) => (
@@ -1355,33 +1064,33 @@ function DragDropRanking({ options, value, onChange }: DragDropRankingProps) {
     </div>
   );
 }
- 
+
 interface AutocompleteInputProps {
   options: { value: string; label: string }[];
   value: string[];
   onChange: (value: string[]) => void;
 }
- 
+
 function AutocompleteInput({ options, value, onChange }: AutocompleteInputProps) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
- 
+
   const matches = options.filter(
     o => o.label.toLowerCase().includes(query.toLowerCase()) && !value.includes(o.value)
   );
- 
+
   const selectBrand = (val: string) => {
     onChange([...value, val]);
     setQuery("");
     setOpen(false);
     setActiveIdx(-1);
   };
- 
+
   const removeBrand = (val: string) => {
     onChange(value.filter(v => v !== val));
   };
- 
+
   return (
     <div className="space-y-3">
       <div className="relative">
@@ -1437,12 +1146,12 @@ function AutocompleteInput({ options, value, onChange }: AutocompleteInputProps)
     </div>
   );
 }
- 
+
 interface SurveyQuestionProps extends Question {
   value: string | string[] | undefined;
   onChange: (value: string | string[]) => void;
 }
- 
+
 function SurveyQuestionComponent({
   id,
   question,
@@ -1458,15 +1167,15 @@ function SurveyQuestionComponent({
 }: SurveyQuestionProps) {
   const [otherText, setOtherText] = useState("");
   const [isOtherSelected, setIsOtherSelected] = useState(false);
- 
+
   const exclusiveOptions = ["none", "no", "no-significant-sensitivity", "none-of-the-above", "material-unimportant"];
- 
+
   useEffect(() => {
     if ((type === "select-multiple" || type === "multiple") && allowOther) {
       const values = Array.isArray(value) ? value : [];
       const hasOther = values.some(v => v === "other" || (typeof v === "string" && v.startsWith("other:")));
       setIsOtherSelected(hasOther);
- 
+
       const otherValue = values.find(v => typeof v === "string" && v.startsWith("other:"));
       if (otherValue) {
         setOtherText((otherValue as string).replace("other:", ""));
@@ -1475,27 +1184,27 @@ function SurveyQuestionComponent({
       }
     }
   }, [value, type, allowOther]);
- 
+
   const handleOtherTextBlur = () => {
     const values = Array.isArray(value) ? (value as string[]).filter(v => !v.startsWith("other:")) : [];
     const cleanValues = values.filter(v => v !== "other");
- 
+
     if (otherText.trim()) {
       onChange([...cleanValues, `other:${otherText}`]);
     } else {
       onChange(cleanValues);
     }
   };
- 
+
   const handleOtherTextChange = (text: string) => {
     setOtherText(text);
   };
- 
+
   const handleOptionClick = (optionValue: string) => {
     const current = Array.isArray(value) ? value : [];
     const isSelected = current.includes(optionValue);
     const isExclusive = exclusiveOptions.includes(optionValue);
- 
+
     if (isSelected) {
       const filtered = current.filter((v) => v !== optionValue && !(typeof v === "string" && v.startsWith("other:")));
       onChange(filtered);
@@ -1515,7 +1224,7 @@ function SurveyQuestionComponent({
       }
     }
   };
- 
+
   const renderQuestion = () => {
     switch (type) {
       case "ranking":
@@ -1526,7 +1235,7 @@ function SurveyQuestionComponent({
             onChange={onChange}
           />
         );
- 
+
       case "text":
         return (
           <div className="space-y-2">
@@ -1538,7 +1247,7 @@ function SurveyQuestionComponent({
             />
           </div>
         );
- 
+
       case "single":
         return (
           <div className="grid gap-2">
@@ -1563,7 +1272,7 @@ function SurveyQuestionComponent({
             })}
           </div>
         );
- 
+
       case "dropdown":
         return (
           <select
@@ -1579,7 +1288,7 @@ function SurveyQuestionComponent({
             ))}
           </select>
         );
- 
+
       case "multiple":
       case "select-multiple":
         return (
@@ -1590,7 +1299,7 @@ function SurveyQuestionComponent({
                 const isSelected = values.includes(option.value) ||
                   (option.value === "other" && values.some(v => typeof v === "string" && v.startsWith("other:")));
                 const isExclusive = exclusiveOptions.includes(option.value);
- 
+
                 return (
                   <button
                     key={option.value}
@@ -1613,7 +1322,7 @@ function SurveyQuestionComponent({
                 );
               })}
             </div>
- 
+
             {allowOther && isOtherSelected && (
               <div className="mt-4 p-4 rounded-lg border-2 border-primary/20 bg-primary/5">
                 <Label htmlFor={`${id}-other`} className="text-sm font-medium mb-2 block">
@@ -1631,7 +1340,7 @@ function SurveyQuestionComponent({
             )}
           </div>
         );
- 
+
       case "autocomplete":
         return (
           <AutocompleteInput
@@ -1640,7 +1349,7 @@ function SurveyQuestionComponent({
             onChange={onChange}
           />
         );
- 
+
       default:
         return (
           <div className="p-4 text-red-500">
@@ -1649,7 +1358,7 @@ function SurveyQuestionComponent({
         );
     }
   };
- 
+
   return (
     <div className="space-y-4">
       <div className="space-y-1">
@@ -1660,7 +1369,7 @@ function SurveyQuestionComponent({
     </div>
   );
 }
- 
+
 export default function Survey() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -1669,13 +1378,13 @@ export default function Survey() {
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [isComplete, setIsComplete] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
- 
+
   const [surveyQuestions, setSurveyQuestions] = useState<Question[]>(getAllQuestions());
- 
+
   const visibleQuestions = surveyQuestions.filter(q =>
     !q.conditional || q.conditional(answers)
   );
- 
+
   // ─── Restore saved answers on first mount ───────────────────────────────────
   useEffect(() => {
     try {
@@ -1689,7 +1398,7 @@ export default function Survey() {
       // ignore malformed storage
     }
   }, []);
- 
+
   // ─── Auto-submit after OAuth redirect if pendingSubmit is set ───────────────
   useEffect(() => {
     if (!isAuthenticated || isLoading) return;
@@ -1706,28 +1415,28 @@ export default function Survey() {
       // ignore malformed storage
     }
   }, [isAuthenticated, isLoading]);
- 
+
   useEffect(() => {
     setSurveyQuestions(getAllQuestions());
   }, [answers["product-interests"]]);
- 
+
   useEffect(() => {
     if (currentStep >= visibleQuestions.length && visibleQuestions.length > 0) {
       setCurrentStep(visibleQuestions.length - 1);
     }
   }, [visibleQuestions.length]);
- 
+
   const submitSurvey = useMutation({
     mutationFn: async (surveyData: { answers: Record<string, string | string[]> }) => {
       if (!isAuthenticated || !user?.googleId) {
         throw new Error("You must be logged in to submit a survey.");
       }
- 
+
       const processedAnswers: Record<string, string | string[]> = {};
- 
+
       for (const [key, val] of Object.entries(surveyData.answers)) {
         const question = visibleQuestions.find(q => q.id === key);
- 
+
         if (question?.type === "text" && question?.optional && (!val || (typeof val === "string" && val.trim() === ""))) {
           processedAnswers[key] = "NONE";
         } else if ((question?.type === "select-multiple" || question?.type === "multiple") && question?.allowOther && Array.isArray(val)) {
@@ -1744,7 +1453,7 @@ export default function Survey() {
           processedAnswers[key] = val;
         }
       }
- 
+
       const res = await fetch("/api/survey-responses", {
         method: "POST",
         credentials: "include",
@@ -1753,21 +1462,21 @@ export default function Survey() {
         },
         body: JSON.stringify({ answers: processedAnswers }),
       });
- 
+
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({ message: res.statusText }));
         throw new Error(errorData.message || "Failed to submit survey");
       }
- 
+
       return res.json();
     },
- 
+
     onSuccess: (data) => {
       localStorage.removeItem(STORAGE_KEY);
       console.log("Survey submitted successfully:", data);
       setIsComplete(true);
     },
- 
+
     onError: (error: any) => {
       toast({
         title: "Error submitting survey",
@@ -1776,17 +1485,17 @@ export default function Survey() {
       });
     },
   });
- 
+
   const currentQuestion = visibleQuestions[currentStep];
   const isLastQuestion = currentStep === visibleQuestions.length - 1;
   const progressStep = currentStep + 1;
   const totalSteps = visibleQuestions.length;
- 
+
   const handleAnswer = (value: string | string[]) => {
     const newAnswers = { ...answers, [currentQuestion.id]: value };
     setAnswers(newAnswers);
   };
- 
+
   const handleNext = () => {
     if (isLastQuestion) {
       if (!isAuthenticated) {
@@ -1815,7 +1524,7 @@ export default function Survey() {
       setCurrentStep(currentStep + 1);
     }
   };
- 
+
   const handlePrevious = () => {
     if (currentStep === 1) {
       setAnswers({});
@@ -1824,14 +1533,14 @@ export default function Survey() {
       setCurrentStep(currentStep - 1);
     }
   };
- 
+
   const canProceed = () => {
     const answer = answers[currentQuestion.id];
- 
+
     if (currentQuestion.optional) return true;
- 
+
     if (!answer) return false;
- 
+
     if (currentQuestion.type === "multiple" || currentQuestion.type === "select-multiple") {
       const answerArray = Array.isArray(answer) ? answer : [];
       if (currentQuestion.maxSelections) {
@@ -1839,19 +1548,19 @@ export default function Survey() {
       }
       return answerArray.length > 0;
     }
- 
+
     if (currentQuestion.type === "ranking") {
       const answerArray = Array.isArray(answer) ? answer : [];
       return answerArray.length === currentQuestion.options?.length;
     }
- 
+
     if (currentQuestion.type === "text") {
       return typeof answer === "string" && answer.trim().length > 0;
     }
- 
+
     return Boolean(answer);
   };
- 
+
   const handleGetSampleKit = () => {
     if (!isAuthenticated) {
       toast({
@@ -1865,13 +1574,13 @@ export default function Survey() {
     }
     setLocation("/account");
   };
- 
+
   const saveNotificationPreference = useMutation({
     mutationFn: async () => {
       if (!isAuthenticated || !user?.googleId) {
         throw new Error("You must be logged in.");
       }
- 
+
       const res = await fetch("/api/notify-when-ready", {
         method: "POST",
         credentials: "include",
@@ -1883,12 +1592,12 @@ export default function Survey() {
           email: user.email,
         }),
       });
- 
+
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({ message: res.statusText }));
         throw new Error(errorData.message || "Failed to save preference");
       }
- 
+
       return res.json();
     },
     onSuccess: () => {
@@ -1905,10 +1614,10 @@ export default function Survey() {
       });
     },
   });
- 
+
   if (isComplete) {
     const isPreferenceSaved = saveNotificationPreference.isSuccess;
- 
+
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -1919,7 +1628,7 @@ export default function Survey() {
                 <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-primary to-chart-2 flex items-center justify-center">
                   <CheckCircle2 className="h-10 w-10 text-white" />
                 </div>
- 
+
                 <div className="space-y-3">
                   <h1 className="text-3xl md:text-4xl font-bold font-heading">
                     Thank you for taking the survey!
@@ -1933,7 +1642,7 @@ export default function Survey() {
                     Click the box below to be notified when it's ready.
                   </p>
                 </div>
- 
+
                 <div className="pt-4">
                   <div
                     className={`
@@ -1975,7 +1684,7 @@ export default function Survey() {
                 </div>
               </CardContent>
             </Card>
- 
+
             <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-chart-2/5">
               <CardContent className="p-8 space-y-4">
                 <div className="text-center space-y-3">
@@ -1986,7 +1695,7 @@ export default function Survey() {
                     Get a curated selection of the brands that fit you best. Try before you commit to full-size products!
                   </p>
                 </div>
- 
+
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
                     <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
@@ -2001,7 +1710,7 @@ export default function Survey() {
                     <p className="text-sm">Risk-free way to discover new brands</p>
                   </div>
                 </div>
- 
+
                 <div className="pt-4">
                   <Button
                     size="lg"
@@ -2021,7 +1730,7 @@ export default function Survey() {
       </div>
     );
   }
- 
+
   if (!currentQuestion) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -2033,7 +1742,7 @@ export default function Survey() {
       </div>
     );
   }
- 
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -2048,18 +1757,18 @@ export default function Survey() {
                 Answer a few questions to get personalized recommendations
               </p>
             </div>
- 
+
             <SurveyProgress
               currentStep={progressStep}
               totalSteps={totalSteps}
             />
- 
+
             <SurveyQuestionComponent
               {...currentQuestion}
               value={answers[currentQuestion.id]}
               onChange={handleAnswer}
             />
- 
+
             <div className="flex gap-4 justify-between">
               <Button
                 variant="outline"
@@ -2088,7 +1797,7 @@ export default function Survey() {
         </div>
       </main>
       <Footer />
- 
+
       {/* Login provider modal */}
       {showLoginModal && (
         <div
@@ -2105,7 +1814,7 @@ export default function Survey() {
                 Sign in to save your answers and complete your survey.
               </p>
             </div>
- 
+
             <div className="space-y-3">
               <button
                 onClick={() => { window.location.href = "/api/auth/google-survey"; }}
@@ -2119,7 +1828,7 @@ export default function Survey() {
                 </svg>
                 Continue with Google
               </button>
- 
+
               <button
                 onClick={() => { window.location.href = "/api/auth/facebook-survey"; }}
                 className="w-full flex items-center justify-center gap-3 p-3 rounded-lg border-2 border-border hover:border-primary/50 transition-all font-medium"
@@ -2130,7 +1839,7 @@ export default function Survey() {
                 Continue with Facebook
               </button>
             </div>
- 
+
             <button
               onClick={() => setShowLoginModal(false)}
               className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -2143,4 +1852,3 @@ export default function Survey() {
     </div>
   );
 }
- 
