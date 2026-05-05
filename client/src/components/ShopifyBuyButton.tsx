@@ -39,54 +39,64 @@ export default function ShopifyBuyButton({
           options: {
 product: {
   iframe: false,
-  contents: {
-    img: false,
-    title: false,
-    price: true,
-    description: false,
-    button: true,
-  },
+contents: {
+  img: true,         // keep image
+  title: false,      // hide title 
+  price: true,       // keep price
+  description: false,
+  button: true,
+},
   text: {
     button: buttonText,
   },
-  styles: {
-    product: {
-      '@media (min-width: 601px)': {
-        'max-width': '100%',
-        'margin-left': '0px',
-        'margin-bottom': '0px',
-      },
-    },
-    button: {
-      'background-color': '#fc5f5f',
-      color: '#fafafa',
-      ':hover': {
-        'background-color': '#e35656',
-        color: '#fafafa',
-      },
-      ':focus': {
-        'background-color': '#e35656',
-      },
-      'border-radius': '0.75rem',
-      'font-weight': 'bold',
-      'font-size': '1.125rem',
-      padding: '1rem 2rem',
-      width: '100%',
-    },
-    prices: {
-      'font-size': '0px',  // 👈 hides "Regular price" label
-    },
-    price: {
-      'font-family': 'inherit',
-      'font-size': '1.25rem',
-      color: '#fc5f5f',
-    },
-    title: {
-      'font-family': 'inherit',
-      'font-size': '1.5rem',
-      'font-weight': 'bold',
+styles: {
+  product: {
+    '@media (min-width: 601px)': {
+      'max-width': '100%',
+      'margin-left': '0px',
+      'margin-bottom': '0px',
+      'margin-right': '0px',  // 👈 removes right gap
     },
   },
+  img: {
+    'border-radius': '0.5rem',
+    width: '100%',
+  },
+  prices: {
+    'display': 'none',  // 👈 hides "Regular price" label, keeps the number
+  },
+  price: {
+    'font-family': 'inherit',
+    'font-size': '1.5rem',
+    'font-weight': 'bold',
+    color: '#fc5f5f',
+  },
+  button: {
+    'background-color': '#fc5f5f',
+    color: '#ffffff',
+    ':hover': {
+      'background-color': '#e35656',
+      color: '#ffffff',
+    },
+    ':focus': {
+      'background-color': '#e35656',
+    },
+    'border-radius': '0.75rem',
+    'font-weight': '700',
+    'font-size': '1rem',
+    padding: '0.875rem 2rem',
+    width: '100%',
+    'margin-top': '1rem',
+    'box-shadow': '0 4px 14px rgba(252, 95, 95, 0.4)',  // 👈 gives it depth like the other button
+    'letter-spacing': '0.025em',
+    'text-transform': 'none',
+  },
+  title: {
+    'font-family': 'inherit',
+    'font-size': '1.5rem',
+    'font-weight': 'bold',
+  },
+},
 },
             cart: {
               styles: {
