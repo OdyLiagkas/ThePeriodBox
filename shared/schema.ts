@@ -44,6 +44,7 @@ export const users = pgTable("users", {
   firstName: text("first_name"),
   lastName: text("last_name"),
   googleId: varchar("google_id", { length: 255 }).unique(),
+  facebookId: varchar("facebook_id", { length: 255 }).unique(),
   profileImageUrl: text("profile_image_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
