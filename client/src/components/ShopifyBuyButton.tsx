@@ -37,54 +37,57 @@ export default function ShopifyBuyButton({
           node: containerRef.current,
           moneyFormat,
           options: {
-            product: {
-              iframe: false,
-              contents: {
-                img: true,
-                title: true,
-                price: true,
-                description: true,
-                button: true,
-              },
-              text: {
-                button: buttonText,
-              },
-              styles: {
-                product: {
-                  '@media (min-width: 601px)': {
-                    'max-width': '100%',
-                    'margin-left': '0px',
-                    'margin-bottom': '0px',
-                  },
-                },
-                button: {
-                  'background-color': '#fc5f5f',
-                  color: '#fafafa',
-                  ':hover': {
-                    'background-color': '#e35656',
-                    color: '#fafafa',
-                  },
-                  ':focus': {
-                    'background-color': '#e35656',
-                  },
-                  'border-radius': '0.75rem',
-                  'font-weight': 'bold',
-                  'font-size': '1.125rem',
-                  padding: '1rem 2rem',
-                  width: '100%',
-                },
-                title: {
-                  'font-family': 'inherit',
-                  'font-size': '1.5rem',
-                  'font-weight': 'bold',
-                },
-                price: {
-                  'font-family': 'inherit',
-                  'font-size': '1.25rem',
-                  color: '#fc5f5f',
-                },
-              },
-            },
+product: {
+  iframe: false,
+  contents: {
+    img: false,
+    title: false,
+    price: true,
+    description: false,
+    button: true,
+  },
+  text: {
+    button: buttonText,
+  },
+  styles: {
+    product: {
+      '@media (min-width: 601px)': {
+        'max-width': '100%',
+        'margin-left': '0px',
+        'margin-bottom': '0px',
+      },
+    },
+    button: {
+      'background-color': '#fc5f5f',
+      color: '#fafafa',
+      ':hover': {
+        'background-color': '#e35656',
+        color: '#fafafa',
+      },
+      ':focus': {
+        'background-color': '#e35656',
+      },
+      'border-radius': '0.75rem',
+      'font-weight': 'bold',
+      'font-size': '1.125rem',
+      padding: '1rem 2rem',
+      width: '100%',
+    },
+    prices: {
+      'font-size': '0px',  // 👈 hides "Regular price" label
+    },
+    price: {
+      'font-family': 'inherit',
+      'font-size': '1.25rem',
+      color: '#fc5f5f',
+    },
+    title: {
+      'font-family': 'inherit',
+      'font-size': '1.5rem',
+      'font-weight': 'bold',
+    },
+  },
+},
             cart: {
               styles: {
                 button: {
