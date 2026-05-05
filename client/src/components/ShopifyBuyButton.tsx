@@ -37,67 +37,55 @@ export default function ShopifyBuyButton({
           node: containerRef.current,
           moneyFormat,
           options: {
-product: {
-  iframe: false,
-contents: {
-  img: true,         // keep image
-  title: false,      // hide title 
-  price: true,       // keep price
-  description: false,
-  button: true,
-},
-  text: {
-    button: buttonText,
-  },
-styles: {
-  product: {
-    '@media (min-width: 601px)': {
-      'max-width': '100%',
-      'margin-left': '0px',
-      'margin-bottom': '0px',
-      'margin-right': '0px',  // 👈 removes right gap
-    },
-  },
-  img: {
-    'border-radius': '0.5rem',
-    width: '100%',
-  },
-  prices: {
-    'display': 'none',  // 👈 hides "Regular price" label, keeps the number
-  },
-  price: {
-    'font-family': 'inherit',
-    'font-size': '1.5rem',
-    'font-weight': 'bold',
-    color: '#fc5f5f',
-  },
-  button: {
-    'background-color': '#fc5f5f',
-    color: '#ffffff',
-    ':hover': {
-      'background-color': '#e35656',
-      color: '#ffffff',
-    },
-    ':focus': {
-      'background-color': '#e35656',
-    },
-    'border-radius': '0.75rem',
-    'font-weight': '700',
-    'font-size': '1rem',
-    padding: '0.875rem 2rem',
-    width: '100%',
-    'margin-top': '1rem',
-    'box-shadow': '0 4px 14px rgba(252, 95, 95, 0.4)',  // 👈 gives it depth like the other button
-    'letter-spacing': '0.025em',
-    'text-transform': 'none',
-  },
-  title: {
-    'font-family': 'inherit',
-    'font-size': '1.5rem',
-    'font-weight': 'bold',
-  },
-},
-},
+            product: {
+              iframe: false,
+              contents: {
+                img: true,
+                title: true,
+                price: true,
+                description: true,
+                button: true,
+              },
+              text: {
+                button: buttonText,
+              },
+              styles: {
+                product: {
+                  '@media (min-width: 601px)': {
+                    'max-width': '100%',
+                    'margin-left': '0px',
+                    'margin-bottom': '0px',
+                    'margin-right': '0px',
+                  },
+                },
+                button: {
+                  'background-color': '#fc5f5f',
+                  color: '#fafafa',
+                  ':hover': {
+                    'background-color': '#e35656',
+                    color: '#fafafa',
+                  },
+                  ':focus': {
+                    'background-color': '#e35656',
+                  },
+                  'border-radius': '0.75rem',
+                  'font-weight': 'bold',
+                  'font-size': '1.125rem',
+                  padding: '1rem 2rem',
+                  width: '100%',
+                },
+                title: {
+                  'font-family': 'inherit',
+                  'font-size': '1.5rem',
+                  'font-weight': 'bold',
+                },
+                price: {
+                  'font-family': 'inherit',
+                  'font-size': '1.25rem',
+                  color: '#fc5f5f',
+                },
+              },
+            },
             cart: {
               styles: {
                 button: {
@@ -164,9 +152,42 @@ styles: {
       document.body.appendChild(script);
     };
 
+// Inject CSS to fix Shopify's rendered output
+const style = document.createElement('style');
+style.textContent = `
+  .shopify-buy__product__variant-selects-wrapper { display: none !important; }
+  .shopify-buy__product-description { display: none !important; }
+  
+  /* Hide "Regular price" label only, keep the number */
+  .shopify-buy__product__variant-price-label { display: none !important; }
+  .shopify-buy__product-compare-at-price { display: none !important; }
+  
+  /* Style the button */
+  .shopify-buy__btn {
+    background: linear-gradient(to right, #fc5f5f, #f97316) !important;
+    color: white !important;
+    border-radius: 0.75rem !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    padding: 0.875rem 2rem !important;
+    width: 100% !important;
+    margin-top: 1rem !important;
+    box-shadow: 0 4px 14px rgba(252, 95, 95, 0.4) !important;
+    border: none !important;
+    cursor: pointer !important;
+    display: block !important;
+  }
+  .shopify-buy__btn:hover {
+    background: linear-gradient(to right, #e35656, #ea6f0e) !important;
+    box-shadow: 0 6px 20px rgba(252, 95, 95, 0.5) !important;
+  }
+`;
+document.head.appendChild(style);
+
     loadScript();
     initialized.current = true;
 
+    
     return () => {
       // Shopify UI handles its own cleanup on re-render
     };
