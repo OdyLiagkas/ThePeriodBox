@@ -94,6 +94,7 @@ passport.use("facebook", new FacebookStrategy({
   clientSecret: process.env.FACEBOOK_APP_SECRET!,
   callbackURL: `${process.env.AUTH_REDIRECT_URL}/api/auth/facebook/callback`,
   profileFields: ["id", "emails", "name", "photos"],
+  enableProof: true,
 }, facebookVerify));
 
 // Strategy 2: Survey login → goes to /survey
@@ -102,6 +103,7 @@ passport.use("facebook-survey", new FacebookStrategy({
   clientSecret: process.env.FACEBOOK_APP_SECRET!,
   callbackURL: `${process.env.AUTH_REDIRECT_URL}/api/auth/facebook/callback-survey`,
   profileFields: ["id", "emails", "name", "photos"],
+  enableProof: true,
 }, facebookVerify));
 
 passport.serializeUser((user: any, done) => done(null, user.id));

@@ -82,13 +82,13 @@ app.get("/api/auth/google/callback",
     (req, res) => res.redirect("/survey")
   ); 
 
-  app.get("/api/auth/facebook", passport.authenticate("facebook", { scope: ["email"] }));
+  app.get("/api/auth/facebook", passport.authenticate("facebook", { scope: ["public_profile", "email"] }));
   app.get("/api/auth/facebook/callback",
   passport.authenticate("facebook", { failureRedirect: "/login" }),
   (req, res) => res.redirect("/account")
   );
 
-  app.get("/api/auth/facebook-survey", passport.authenticate("facebook-survey", { scope: ["email"] }));
+  app.get("/api/auth/facebook-survey", passport.authenticate("facebook-survey", { scope: ["public_profile", "email"] }));
   app.get("/api/auth/facebook/callback-survey",
   passport.authenticate("facebook-survey", { failureRedirect: "/login" }),
   (req, res) => res.redirect("/survey")
