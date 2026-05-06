@@ -6,6 +6,8 @@ import connectPg from "connect-pg-simple";
 import passport from "passport";
 import "./auth"; // This imports your server/auth.ts logic
 import surveyRouter from "./routes/survey";
+import surveyGuestRouter from "./routes/survey-guest-route";
+
 
 
 const app = express();
@@ -129,6 +131,7 @@ res.json({
     throw err;
   });
 
+  app.use("/api", surveyGuestRouter);
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes

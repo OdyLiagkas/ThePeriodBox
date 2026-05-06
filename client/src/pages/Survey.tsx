@@ -1378,6 +1378,12 @@ export default function Survey() {
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [isComplete, setIsComplete] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showGuestForm, setShowGuestForm] = useState(false);
+  const [guestFirstName, setGuestFirstName] = useState("");
+  const [guestLastName, setGuestLastName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestError, setGuestError] = useState("");
+  const [guestSubmitting, setGuestSubmitting] = useState(false);
 
   const [surveyQuestions, setSurveyQuestions] = useState<Question[]>(getAllQuestions());
 
@@ -1494,6 +1500,51 @@ export default function Survey() {
   const handleAnswer = (value: string | string[]) => {
     const newAnswers = { ...answers, [currentQuestion.id]: value };
     setAnswers(newAnswers);
+  };
+
+  const handleGuestSubmit = async () => {
+    // Validate fields
+    if (!guestFirstName.trim() || !guestLastName.trim() || !guestEmail.trim()) {
+      setGuestError("Please fill in all fields.");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(guestEmail.trim())) {
+      setGuestError("Please enter a valid email address.");
+      return;
+    }
+
+    setGuestError("");
+    setGuestSubmitting(true);
+
+    try {
+      const finalAnswers = getAutoSetAnswers(answers);
+
+      const res = await fetch("/api/survey-responses/guest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: guestFirstName.trim(),
+          lastName: guestLastName.trim(),
+          email: guestEmail.trim(),
+          answers: finalAnswers,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ message: res.statusText }));
+        throw new Error(errorData.message || "Failed to submit survey");
+      }
+
+      localStorage.removeItem(STORAGE_KEY);
+      setShowLoginModal(false);
+      setShowGuestForm(false);
+      setIsComplete(true);
+    } catch (err: any) {
+      setGuestError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setGuestSubmitting(false);
+    }
   };
 
   const handleNext = () => {
@@ -1788,7 +1839,7 @@ export default function Survey() {
                 {submitSurvey.isPending
                   ? "Submitting..."
                   : isLastQuestion
-                    ? (isAuthenticated ? "Complete Survey" : "Sign in to Submit")
+                    ? (isAuthenticated ? "Complete Survey" : "Submit")
                     : "Next Question"
                 }
               </Button>
@@ -1801,51 +1852,133 @@ export default function Survey() {
       {/* Login provider modal */}
       {showLoginModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={() => setShowLoginModal(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-y-auto py-8"
+          onClick={() => { setShowLoginModal(false); setShowGuestForm(false); setGuestError(""); }}
         >
           <div
             className="bg-background rounded-xl border-2 p-8 max-w-sm w-full mx-4 space-y-6"
             onClick={e => e.stopPropagation()}
           >
-            <div className="text-center space-y-2">
-              <h2 className="text-xl font-bold font-heading">Almost there!</h2>
-              <p className="text-sm text-muted-foreground">
-                Sign in to save your answers and complete your survey.
-              </p>
-            </div>
+            {!showGuestForm ? (
+              <>
+                <div className="text-center space-y-2">
+                  <h2 className="text-xl font-bold font-heading">Almost there!</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Sign in to save your answers.
+                  </p>
+                </div>
 
-            <div className="space-y-3">
-              <button
-                onClick={() => { window.location.href = "/api/auth/google-survey"; }}
-                className="w-full flex items-center justify-center gap-3 p-3 rounded-lg border-2 border-border hover:border-primary/50 transition-all font-medium"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Continue with Google
-              </button>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => { window.location.href = "/api/auth/google-survey"; }}
+                    className="w-full flex items-center justify-center gap-3 p-3 rounded-lg border-2 border-border hover:border-primary/50 transition-all font-medium"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Continue with Google
+                  </button>
 
-              <button
-                onClick={() => { window.location.href = "/api/auth/facebook-survey"; }}
-                className="w-full flex items-center justify-center gap-3 p-3 rounded-lg border-2 border-border hover:border-primary/50 transition-all font-medium"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2">
-                  <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.269h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
-                </svg>
-                Continue with Facebook
-              </button>
-            </div>
+                  <button
+                    onClick={() => { window.location.href = "/api/auth/facebook-survey"; }}
+                    className="w-full flex items-center justify-center gap-3 p-3 rounded-lg border-2 border-border hover:border-primary/50 transition-all font-medium"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2">
+                      <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.269h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
+                    </svg>
+                    Continue with Facebook
+                  </button>
 
-            <button
-              onClick={() => setShowLoginModal(false)}
-              className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Cancel
-            </button>
+                  {/* Divider */}
+                  <div className="flex items-center gap-3 py-1">
+                    <div className="flex-1 border-t border-border" />
+                    <span className="text-xs text-muted-foreground">or</span>
+                    <div className="flex-1 border-t border-border" />
+                  </div>
+
+                  <button
+                    onClick={() => setShowGuestForm(true)}
+                    className="w-full flex items-center justify-center gap-3 p-3 rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-all font-medium text-muted-foreground hover:text-foreground"
+                  >
+                    Continue as Guest
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setShowLoginModal(false)}
+                  className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="text-center space-y-2">
+                  <h2 className="text-xl font-bold font-heading">Submit as Guest</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Enter your details to submit your survey results.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium">First Name</label>
+                      <input
+                        type="text"
+                        className="w-full p-2.5 rounded-lg border-2 border-border bg-background text-sm focus:outline-none focus:border-primary"
+                        placeholder="Jane"
+                        value={guestFirstName}
+                        onChange={e => setGuestFirstName(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium">Last Name</label>
+                      <input
+                        type="text"
+                        className="w-full p-2.5 rounded-lg border-2 border-border bg-background text-sm focus:outline-none focus:border-primary"
+                        placeholder="Doe"
+                        value={guestLastName}
+                        onChange={e => setGuestLastName(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">Email</label>
+                    <input
+                      type="email"
+                      className="w-full p-2.5 rounded-lg border-2 border-border bg-background text-sm focus:outline-none focus:border-primary"
+                      placeholder="jane@example.com"
+                      value={guestEmail}
+                      onChange={e => setGuestEmail(e.target.value)}
+                    />
+                  </div>
+
+                  {guestError && (
+                    <p className="text-sm text-destructive">{guestError}</p>
+                  )}
+
+                  <button
+                    onClick={handleGuestSubmit}
+                    disabled={guestSubmitting}
+                    className="w-full p-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {guestSubmitting ? "Submitting..." : "Submit Survey"}
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => { setShowGuestForm(false); setGuestError(""); }}
+                  className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  ← Back to sign in options
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
