@@ -50,6 +50,7 @@ router.post("/survey-responses/guest", async (req, res) => {
     const [response] = await db
       .insert(surveyResponses)
       .values({
+        sessionId: "",
         userId,
         answers,
       })
