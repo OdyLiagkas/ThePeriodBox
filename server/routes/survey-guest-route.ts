@@ -1,14 +1,8 @@
 // server/routes/survey-guest.ts
 //
-// Mount this in server/index.ts alongside your existing surveyRouter:
-//
+// Add to server/index.ts:
 //   import surveyGuestRouter from "./routes/survey-guest";
 //   app.use("/api", surveyGuestRouter);
-//
-// This file assumes you already have:
-//   - db (drizzle instance) exported from ./db
-//   - users and surveyResponses tables in @shared/schema
-//   - surveyResponses has columns: id, userId, answers, createdAt
 
 import express from "express";
 import { db } from "../db";
@@ -31,48 +25,41 @@ router.post("/survey-responses/guest", async (req, res) => {
       return res.status(400).json({ message: "Invalid email address." });
     }
 
-    // Check if a guest with this email already submitted — if so, reuse their user row
-    // so we don't create duplicate guest accounts for the same person.
+    // Reuse existing user row if this email already exists
     let userId: string;
-    const [existingGuest] = await db
+    const [existingUser] = await db
       .select()
       .from(users)
       .where(eq(users.email, email));
 
-    if (existingGuest) {
-      userId = existingGuest.id;
+    if (existingUser) {
+      userId = existingUser.id;
     } else {
-      // Create a new guest user with null OAuth IDs
-      const [newUser] = await db
-        .insert(users)
-        .values({
-          id: crypto.randomUUID(),
-          googleId: null,
-          facebookId: null,
-          email,
-          firstName,
-          lastName,
-          profileImageUrl: null,
-        })
-        .returning();
-      userId = newUser.id;
+      // Create guest user — googleId and facebookId are omitted (null in DB)
+      const newId = crypto.randomUUID();
+      await db.insert(users).values({
+        id: newId,
+        email,
+        firstName,  // maps to "first_name" column via Drizzle schema
+        lastName,   // maps to "last_name" column via Drizzle schema
+      });
+      userId = newId;
     }
 
-    // Save the survey response linked to this guest user
+    // Insert survey response — sessionId defaults to "" per schema, id defaults via gen_random_uuid()
     const [response] = await db
       .insert(surveyResponses)
       .values({
-        id: crypto.randomUUID(),
         userId,
         answers,
-        createdAt: new Date(),
       })
       .returning();
 
     return res.status(201).json({ success: true, responseId: response.id });
   } catch (err: any) {
     console.error("Guest survey submission error:", err);
-    return res.status(500).json({ message: "Internal server error." });
+    // Return the real error message so you can debug easily
+    return res.status(500).json({ message: err.message || "Internal server error." });
   }
 });
 
