@@ -5,10 +5,10 @@ import { z } from "zod";
 
 export const surveyResponses = pgTable("survey_responses", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  sessionId: text("session_id").default(""),
   userId: text("user_id").notNull(),
   answers: jsonb("answers").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  email: text("email").notNull().default(""),
 });
 
 export const insertSurveyResponseSchema = createInsertSchema(surveyResponses).omit({
