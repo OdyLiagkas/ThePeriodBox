@@ -286,6 +286,19 @@ const menstruatingQuestions: Question[] = [
       { value: "viv", label: "Viv" },
     ],
   },
+{
+  id: "personality-vibe",
+  question: "Help us get to know you a bit better outside of the products you are looking to try. Pick a morning beverage that connects with your personality.",
+  type: "single",
+  options: [
+    { value: "matcha-latte", label: "The Matcha Latte: Morning walks, linen sets, farmers markets, sage green, a cat on the windowsill" },
+    { value: "classic-coffee", label: "The Classic Coffee: Early riser, reliable playlist, leather notebook, warm brown tones, a loyal golden retriever" },
+    { value: "iced-honey-latte", label: "The Iced Honey Latte: Golden hour, cozy home décor, candles everywhere, terracotta, a gentle bear" },
+    { value: "espresso", label: "The Espresso: Always moving, packed schedule, sharp dresser, jet black with a pop of red, a falcon" },
+    { value: "tea", label: "The Tea: Quiet evenings, bookmarked pages, layered sweaters, dusty rose and cream, a deer" },
+    { value: "orange-juice", label: "Orange Juice: Clean desk, weekend hikes, minimalist wardrobe, crisp white and sky blue, a dolphin" },
+  ],
+},
 ];
 
 // Pregnant path questions
@@ -401,6 +414,19 @@ const pregnantQuestions: Question[] = [
       { value: "viv", label: "Viv" },
     ],
   },
+{
+  id: "personality-vibe-pregnant",
+  question: "Help us get to know you a bit better outside of the products you are looking to try. Pick a morning beverage that connects with your personality.",
+  type: "single",
+  options: [
+    { value: "matcha-latte", label: "The Matcha Latte: Morning walks, linen sets, farmers markets, sage green, a cat on the windowsill" },
+    { value: "classic-coffee", label: "The Classic Coffee: Early riser, reliable playlist, leather notebook, warm brown tones, a loyal golden retriever" },
+    { value: "iced-honey-latte", label: "The Iced Honey Latte: Golden hour, cozy home décor, candles everywhere, terracotta, a gentle bear" },
+    { value: "espresso", label: "The Espresso: Always moving, packed schedule, sharp dresser, jet black with a pop of red, a falcon" },
+    { value: "tea", label: "The Tea: Quiet evenings, bookmarked pages, layered sweaters, dusty rose and cream, a deer" },
+    { value: "orange-juice", label: "Orange Juice: Clean desk, weekend hikes, minimalist wardrobe, crisp white and sky blue, a dolphin" },
+  ],
+},
   {
     id: "additional-notes-pregnant",
     question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
@@ -583,6 +609,19 @@ const postpartumQuestions: Question[] = [
       { value: "viv", label: "Viv" },
     ],
   },
+{
+  id: "personality-vibe-postpartum",
+  question: "Help us get to know you a bit better outside of the products you are looking to try. Pick a morning beverage that connects with your personality.",
+  type: "single",
+  options: [
+    { value: "matcha-latte", label: "The Matcha Latte: Morning walks, linen sets, farmers markets, sage green, a cat on the windowsill" },
+    { value: "classic-coffee", label: "The Classic Coffee: Early riser, reliable playlist, leather notebook, warm brown tones, a loyal golden retriever" },
+    { value: "iced-honey-latte", label: "The Iced Honey Latte: Golden hour, cozy home décor, candles everywhere, terracotta, a gentle bear" },
+    { value: "espresso", label: "The Espresso: Always moving, packed schedule, sharp dresser, jet black with a pop of red, a falcon" },
+    { value: "tea", label: "The Tea: Quiet evenings, bookmarked pages, layered sweaters, dusty rose and cream, a deer" },
+    { value: "orange-juice", label: "Orange Juice: Clean desk, weekend hikes, minimalist wardrobe, crisp white and sky blue, a dolphin" },
+  ],
+},
   {
     id: "additional-notes-postpartum",
     question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
@@ -782,6 +821,19 @@ const perimenopausalQuestions: Question[] = [
       { value: "viv", label: "Viv" },
     ],
   },
+{
+  id: "personality-vibe-peri",
+  question: "Help us get to know you a bit better outside of the products you are looking to try. Pick a morning beverage that connects with your personality.",
+  type: "single",
+  options: [
+    { value: "matcha-latte", label: "The Matcha Latte: Morning walks, linen sets, farmers markets, sage green, a cat on the windowsill" },
+    { value: "classic-coffee", label: "The Classic Coffee: Early riser, reliable playlist, leather notebook, warm brown tones, a loyal golden retriever" },
+    { value: "iced-honey-latte", label: "The Iced Honey Latte: Golden hour, cozy home décor, candles everywhere, terracotta, a gentle bear" },
+    { value: "espresso", label: "The Espresso: Always moving, packed schedule, sharp dresser, jet black with a pop of red, a falcon" },
+    { value: "tea", label: "The Tea: Quiet evenings, bookmarked pages, layered sweaters, dusty rose and cream, a deer" },
+    { value: "orange-juice", label: "Orange Juice: Clean desk, weekend hikes, minimalist wardrobe, crisp white and sky blue, a dolphin" },
+  ],
+},
   {
     id: "additional-notes-peri",
     question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
@@ -894,6 +946,19 @@ const menopausalQuestions: Question[] = [
       { value: "viv", label: "Viv" },
     ],
   },
+{
+  id: "personality-vibe-meno",
+  question: "Help us get to know you a bit better outside of the products you are looking to try. Pick a morning beverage that connects with your personality.",
+  type: "single",
+  options: [
+    { value: "matcha-latte", label: "The Matcha Latte: Morning walks, linen sets, farmers markets, sage green, a cat on the windowsill" },
+    { value: "classic-coffee", label: "The Classic Coffee: Early riser, reliable playlist, leather notebook, warm brown tones, a loyal golden retriever" },
+    { value: "iced-honey-latte", label: "The Iced Honey Latte: Golden hour, cozy home décor, candles everywhere, terracotta, a gentle bear" },
+    { value: "espresso", label: "The Espresso: Always moving, packed schedule, sharp dresser, jet black with a pop of red, a falcon" },
+    { value: "tea", label: "The Tea: Quiet evenings, bookmarked pages, layered sweaters, dusty rose and cream, a deer" },
+    { value: "orange-juice", label: "Orange Juice: Clean desk, weekend hikes, minimalist wardrobe, crisp white and sky blue, a dolphin" },
+  ],
+},
   {
     id: "additional-notes-meno",
     question: "Is there anything else you want us to know about your body or comfort right now to help us find the right products for your needs?",
@@ -1097,7 +1162,7 @@ function AutocompleteInput({ options, value, onChange }: AutocompleteInputProps)
         <input
           type="text"
           className="w-full p-3 rounded-lg border-2 border-border bg-background text-sm focus:outline-none focus:border-primary"
-          placeholder="Search for brands here, if it doesn't show up we wouldn't have recommended it"
+          placeholder="Search for brands here"
           value={query}
           onChange={e => { setQuery(e.target.value); setOpen(true); setActiveIdx(-1); }}
           onFocus={() => { if (query) setOpen(true); }}
@@ -1114,7 +1179,7 @@ function AutocompleteInput({ options, value, onChange }: AutocompleteInputProps)
           <div className="absolute z-10 w-full mt-1 rounded-lg border border-border bg-background shadow-md overflow-hidden">
             {matches.length === 0 ? (
               <p className="px-4 py-3 text-sm text-muted-foreground italic">
-                Don't worry — we wouldn't recommend this brand anyway.
+                Not found.
               </p>
             ) : (
               matches.map((opt, i) => (
