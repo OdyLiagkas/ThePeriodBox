@@ -288,7 +288,7 @@ const menstruatingQuestions: Question[] = [
   },
 {
   id: "personality-vibe",
-  question: "Help us get to know you a bit better outside of the products you are looking to try. Pick a morning beverage that connects with your personality.",
+  question: "Help us get to know you a bit better outside of the products you are looking to try. Pick a morning beverage that connects with your personality!",
   type: "single",
   options: [
     { value: "matcha-latte", label: "The Matcha Latte: Morning walks, linen sets, farmers markets, sage green, a cat on the windowsill" },
@@ -416,7 +416,7 @@ const pregnantQuestions: Question[] = [
   },
 {
   id: "personality-vibe-pregnant",
-  question: "Help us get to know you a bit better outside of the products you are looking to try. Pick a morning beverage that connects with your personality.",
+  question: "Help us get to know you a bit better outside of the products you are looking to try. Pick a morning beverage that connects with your personality!",
   type: "single",
   options: [
     { value: "matcha-latte", label: "The Matcha Latte: Morning walks, linen sets, farmers markets, sage green, a cat on the windowsill" },
@@ -611,7 +611,7 @@ const postpartumQuestions: Question[] = [
   },
 {
   id: "personality-vibe-postpartum",
-  question: "Help us get to know you a bit better outside of the products you are looking to try. Pick a morning beverage that connects with your personality.",
+  question: "Help us get to know you a bit better outside of the products you are looking to try. Pick a morning beverage that connects with your personality!",
   type: "single",
   options: [
     { value: "matcha-latte", label: "The Matcha Latte: Morning walks, linen sets, farmers markets, sage green, a cat on the windowsill" },
@@ -823,7 +823,7 @@ const perimenopausalQuestions: Question[] = [
   },
 {
   id: "personality-vibe-peri",
-  question: "Help us get to know you a bit better outside of the products you are looking to try. Pick a morning beverage that connects with your personality.",
+  question: "Help us get to know you a bit better outside of the products you are looking to try. Pick a morning beverage that connects with your personality!",
   type: "single",
   options: [
     { value: "matcha-latte", label: "The Matcha Latte: Morning walks, linen sets, farmers markets, sage green, a cat on the windowsill" },
@@ -948,7 +948,7 @@ const menopausalQuestions: Question[] = [
   },
 {
   id: "personality-vibe-meno",
-  question: "Help us get to know you a bit better outside of the products you are looking to try. Pick a morning beverage that connects with your personality.",
+  question: "Help us get to know you a bit better outside of the products you are looking to try. Pick a morning beverage that connects with your personality!",
   type: "single",
   options: [
     { value: "matcha-latte", label: "The Matcha Latte: Morning walks, linen sets, farmers markets, sage green, a cat on the windowsill" },
