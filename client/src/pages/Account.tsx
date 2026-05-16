@@ -334,6 +334,122 @@ function ProductFeedbackCard({ product, onFeedback }: ProductFeedbackCardProps) 
     </Card>
   );
 }
+/* ----------  BRAND SHOWCASE TYPES  ---------- */
+interface ShowcaseProduct {
+  name: string;
+  description: string;
+  imagePath: string;
+}
+
+interface BrandInfo {
+  name: string;
+  tagline?: string;
+  description?: string;
+}
+
+interface BrandShowcaseRow {
+  id: number;
+  brand_info: BrandInfo;
+  products: ShowcaseProduct[];
+}
+
+/* ----------  BRAND SHOWCASE COMPONENT  ---------- */
+function BrandShowcase({ userId }: { userId: number | undefined }) {
+  const { data: rows = [], isLoading } = useQuery<BrandShowcaseRow[]>({
+    queryKey: ['brand-showcase', userId],
+    queryFn: async () => {
+      const res = await fetch("/api/brand-showcase", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to load showcase");
+      return res.json();
+    },
+    enabled: !!userId,
+  });
+
+  if (isLoading || rows.length === 0) return null;
+
+  return (
+    <div className="space-y-10 py-6">
+      {/* Section heading */}
+      <div className="text-center space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary/60">
+          Curated For You
+        </p>
+        <h3 className="text-xl font-bold font-heading">
+          Meet the Brands in Your Box
+        </h3>
+        <p className="text-sm text-muted-foreground max-w-md mx-auto">
+          Here's a closer look at the products we've selected just for you.
+        </p>
+      </div>
+
+      {rows.map((row) => (
+        <div key={row.id} className="space-y-4">
+          {/* Brand header */}
+          <div className="flex items-center gap-3 pb-2 border-b border-border/40">
+            {row.brand_info.logoUrl && (
+              <img
+                src={row.brand_info.logoUrl}
+                alt={row.brand_info.name}
+                className="w-10 h-10 rounded-full object-cover border border-border/30 shadow-sm"
+              />
+            )}
+            <div>
+              <p className="font-bold font-heading text-lg leading-tight">
+                {row.brand_info.name}
+              </p>
+              {row.brand_info.tagline && (
+                <p className="text-xs text-muted-foreground italic">
+                  {row.brand_info.tagline}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {row.brand_info.description && (
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {row.brand_info.description}
+            </p>
+          )}
+
+          {/* Product grid — max 2 per row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {row.products.map((product, idx) => (
+              <div
+                key={idx}
+                className="group rounded-2xl border border-border/40 bg-white overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
+              >
+                {/* Product image */}
+                <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-primary/5 to-chart-2/5">
+                  <img
+                    src={product.imagePath}
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+
+                {/* Product info */}
+                <div className="p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="font-semibold font-heading text-base leading-snug">
+                      {product.name}
+                    </h4>
+
+                  </div>
+
+                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                    {product.description}
+                  </p>
+
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ----------  NOTIFICATION PREFERENCE COMPONENT  ---------- */
 interface NotificationPreferenceProps {
   onGoToSurvey: () => void;
@@ -427,6 +543,9 @@ function NotificationPreference({ onGoToSurvey }: NotificationPreferenceProps) {
           )}
         </div>
       </div>
+
+      {/* ── Brand Showcase: only shown when notified == true ── */}
+      {isNotified && <BrandShowcase userId={user?.id} />}
 
       <div className="max-w-md mx-auto">
         {isNotified ? (

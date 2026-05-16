@@ -7,12 +7,13 @@ import passport from "passport";
 import "./auth"; // This imports your server/auth.ts logic
 import surveyRouter from "./routes/survey";
 import surveyGuestRouter from "./routes/survey-guest-route";
-
+import brandShowcaseRouter from "./routes/brand-showcase";
 
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use("/api", brandShowcaseRouter);
 
 const PostgresStore = connectPg(session);
 app.use(session({
