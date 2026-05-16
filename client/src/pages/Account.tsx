@@ -386,13 +386,6 @@ function BrandShowcase({ userId }: { userId: number | undefined }) {
         <div key={row.id} className="space-y-4">
           {/* Brand header */}
           <div className="flex items-center gap-3 pb-2 border-b border-border/40">
-            {row.brand_info.logoUrl && (
-              <img
-                src={row.brand_info.logoUrl}
-                alt={row.brand_info.name}
-                className="w-10 h-10 rounded-full object-cover border border-border/30 shadow-sm"
-              />
-            )}
             <div>
               <p className="font-bold font-heading text-lg leading-tight">
                 {row.brand_info.name}
