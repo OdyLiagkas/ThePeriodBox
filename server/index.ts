@@ -13,7 +13,6 @@ import brandShowcaseRouter from "./routes/brand-showcase";
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use("/api", brandShowcaseRouter);
 
 const PostgresStore = connectPg(session);
 app.use(session({
@@ -68,6 +67,7 @@ app.use((req, res, next) => {
 });
 
 app.use("/api", surveyRouter);
+app.use("/api", brandShowcaseRouter);
 
 (async () => {
 
