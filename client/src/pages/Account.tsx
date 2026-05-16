@@ -421,13 +421,12 @@ function BrandShowcase({ userId }: { userId: number | undefined }) {
                 </div>
 
                 {/* Product info */}
-                <div className="p-4 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <h4 className="font-semibold font-heading text-base leading-snug">
+                <div className="p-2.5 space-y-1">
+                    <h4 className="font-semibold font-heading text-xs leading-snug">
                       {product.name}
                     </h4>
 
-                  </div>
+
 
                   <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                     {product.description}
