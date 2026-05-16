@@ -1,18 +1,8 @@
-// server/routes/brand-showcase.ts
-// Mount this in server/index.ts with:
-//   import brandShowcaseRouter from "./routes/brand-showcase";
-//   app.use("/api", brandShowcaseRouter);
-
 import { Router, Request, Response } from "express";
-import { pool } from "../db"; // adjust this import to wherever your pg Pool/client lives
+import { pool } from "../db";
 
 const router = Router();
 
-/**
- * GET /api/brand-showcase
- * Returns all brand_showcase rows for the currently authenticated user.
- * Returns [] if no rows exist (so the frontend can hide the section cleanly).
- */
 router.get("/brand-showcase", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -20,6 +10,8 @@ router.get("/brand-showcase", async (req: Request, res: Response) => {
 
   const user = req.user as any;
   const userId = user.id;
+
+  console.log("[brand-showcase] fetching for user:", userId);
 
   try {
     const result = await pool.query(
@@ -29,11 +21,11 @@ router.get("/brand-showcase", async (req: Request, res: Response) => {
        ORDER BY created_at ASC`,
       [userId]
     );
-
-    res.json(result.rows); // array of { id, brand_info, products, created_at }
+    console.log("[brand-showcase] rows found:", result.rows.length);
+    return res.json(result.rows);
   } catch (err) {
     console.error("[brand-showcase] DB error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
